@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLSU EExpress+ | Smart IoT Locker</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.98);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-green: #00ff9d;
+            --neon-blue: #38bdf8;
+            --danger: #f43f5e;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+        
+        /* --- AUTH LAYER --- */
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .auth-card { background: var(--glass-bg); padding: 40px; border-radius: 24px; border: 1px solid var(--glass-border); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        
+        input, select { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 14px; border-radius: 10px; color: white; margin-bottom: 15px; box-sizing: border-box; font-size: 1rem; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem; margin-top: 10px; }
+        .btn-primary { background: var(--neon-blue); color: var(--bg-dark); }
+        .btn-success { background: var(--neon-green); color: var(--bg-dark); }
+
+        /* --- APP CONTENT --- */
+        .main-app { display: none; flex: 1; width: 100%; height: 100vh; }
+        .sidebar { width: 280px; background: var(--glass-bg); border-right: 1px solid var(--glass-border); padding: 30px; display: flex; flex-direction: column; }
+        .content { flex: 1; padding: 40px; overflow-y: auto; background: rgba(0,0,0,0.3); }
+        
+        .nav-item { padding: 15px; margin-bottom: 10px; border-radius: 12px; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
+        .nav-item.active { background: rgba(56, 189, 248, 0.1); color: var(--neon-blue); font-weight: bold; }
+        
+        .card { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .activity-item { padding: 15px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+        
+        .photo-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        #preview-img { width: 100%; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid var(--neon-blue); }
+
+        h2 { border-left: 4px solid var(--neon-green); padding-left: 15px; margin-bottom: 25px; }
+    </style>
+</head>
+<body>
+
+<div id="auth-overlay">
+    <div class="auth-card">
+        <div style="font-size: 3rem; margin-bottom: 15px;">🚀</div>
+        <h1 style="margin:0; color:var(--neon-green); font-size: 1.8rem; letter-spacing: 2px;">SLSU EExpress+</h1>
+        <p style="color:var(--text-muted); margin-bottom: 30px;">Cloud Logistics Authentication</p>
+        
+        <input type="email" id="login-email" placeholder="Email Address" value="alexismortel12@gmail.com">
+        <input type="password" id="login-pass" placeholder="Enter Password">
+        <button class="btn btn-primary" onclick="handleLogin()">SECURE LOGIN</button>
+    </div>
+</div>
+
+<div class="main-app" id="app-body">
+    <div class="sidebar">
+        <div style="font-size: 1.5rem; font-weight: 900; color: var(--neon-green); margin-bottom: 40px;">⚡ EExpress+</div>
+        
+        <div id="nav-courier" style="display:none;">
+            <div class="nav-item active" onclick="showPane('c-dashboard')">Activities Dashboard</div>
+            <div class="nav-item" onclick="showPane('c-drop-off')">Drop-off Parcel</div>
+        </div>
+
+        <div id="nav-recipient" style="display:none;">
+            <div class="nav-item active">My Retrieval Board</div>
+        </div>
+
+        <button class="btn" style="margin-top:auto; background:var(--danger); color:white" onclick="location.reload()">LOGOUT</button>
+    </div>
+
+    <div class="content">
+        <div id="c-dashboard" class="pane" style="display:none;">
+            <h2>Courier <b>Operations</b></h2>
+            <button class="btn btn-success" style="width:auto; padding:15px 30px;" onclick="showPane('c-drop-off')">+ NEW DROP OFF PARCEL</button>
+            
+            <div style="margin-top:40px;">
+                <h3>Pending Activities</h3>
+                <div class="card" id="pending-list">
+                    <p style="color:var(--text-muted)">Scanning for pending deliveries...</p>
+                </div>
+
+                <h3>Past Drop-off Activities</h3>
+                <div class="card" id="past-list">
+                    <p style="color:var(--text-muted)">No history found.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="c-drop-off" class="pane" style="display:none;">
+            <h2>Register <b>New Parcel</b></h2>
+            <div class="card">
+                <label>Receiver Information</label>
+                <input type="text" id="rec-name" placeholder="Full Name">
+                <input type="text" id="rec-contact" placeholder="Contact Number">
+                
+                <label>Parcel Documentation</label>
+                <div class="photo-options">
+                    <button class="btn" style="background:#475569; color:white" onclick="document.getElementById('file-input').click()">GALLERY</button>
+                    <button class="btn" style="background:#475569; color:white" onclick="document.getElementById('file-input-cam').click()">TAKE PHOTO</button>
+                </div>
+                <input type="file" id="file-input" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+                <input type="file" id="file-input-cam" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)">
+                
+                <img id="preview-img" src="" alt="Parcel Preview">
+                
+                <button class="btn btn-primary" style="margin-top:30px" onclick="submitParcel()">COMPLETE REGISTRATION</button>
+            </div>
+        </div>
+
+        <div id="r-dashboard" class="pane" style="display:none;">
+            <h2>Recipient <b>Retrieval Board</b></h2>
+            <div id="recipient-content">
+                <p style="color:var(--text-muted)">Looking for your parcels...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // --- PASTE YOUR CONFIG FROM FIREBASE CONSOLE HERE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyC0E-AQVSm6CN4MQwPHgwH8SkjrDmFpTJk",
+        authDomain: "slsu-eexpress-f3c77.firebaseapp.com",
+        databaseURL: "https://slsu-eexpress-f3c77-default-rtdb.firebaseio.com",
+        projectId: "slsu-eexpress-f3c77",
+        storageBucket: "slsu-eexpress-f3c77.firebasestorage.app",
+        messagingSenderId: "801132927328",
+        appId: "1:801132927328:web:fc74e0aaf21ea2d3046605"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // --- 1. LOGIN LOGIC ---
+    window.handleLogin = () => {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+
+        if (email === "alexismortel12@gmail.com" && pass === "121203") {
+            startApp('courier');
+        } else if (email === "alexismortel12@gmail.com" && pass === "051923") {
+            startApp('recipient');
+        } else {
+            alert("Invalid Credentials. Please check your password.");
+        }
+    };
+
+    function startApp(role) {
+        document.getElementById('auth-overlay').style.display = 'none';
+        document.getElementById('app-body').style.display = 'flex';
+        document.getElementById('nav-' + role).style.display = 'block';
+        showPane(role === 'courier' ? 'c-dashboard' : 'r-dashboard');
+        
+        if(role === 'courier') loadCourierData();
+        if(role === 'recipient') loadRecipientData();
+    }
+
+    window.showPane = (id) => {
+        document.querySelectorAll('.pane').forEach(p => p.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    };
+
+    // --- 2. COURIER LOGIC ---
+    window.previewPhoto = (input) => {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('preview-img');
+                img.src = e.target.result;
+                img.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.submitParcel = () => {
+        const name = document.getElementById('rec-name').value;
+        if(!name) return alert("Please fill up Receiver Name");
+
+        // Step 1: Tell ESP32 to unlock
+        update(ref(db, 'system_control/locker_1'), {
+            lock_command: "UNLOCKED",
+            is_occupied: false
+        });
+
+        // Step 2: Push to Pending list
+        const newParcelRef = push(ref(db, 'parcels'));
+        set(newParcelRef, {
+            receiver: name,
+            contact: document.getElementById('rec-contact').value,
+            status: "Pending",
+            timestamp: new Date().toISOString()
+        });
+
+        alert("IOT: Unlock Signal Sent. Please place the parcel in the locker.");
+        showPane('c-dashboard');
+    };
+
+    function loadCourierData() {
+        onValue(ref(db, 'parcels'), (snapshot) => {
+            const pendingList = document.getElementById('pending-list');
+            const pastList = document.getElementById('past-list');
+            pendingList.innerHTML = ''; pastList.innerHTML = '';
+            
+            snapshot.forEach((child) => {
+                const p = child.val();
+                const html = `<div class="activity-item">
+                    <span><b>${p.receiver}</b><br><small>${p.timestamp.split('T')[0]}</small></span>
+                    <span style="color:${p.status === 'Pending' ? 'var(--neon-blue)' : 'var(--neon-green)'}">${p.status}</span>
+                </div>`;
+                
+                if(p.status === 'Pending') pendingList.innerHTML += html;
+                else pastList.innerHTML += html;
+            });
+        });
+    }
+
+    // --- 3. RECIPIENT LOGIC ---
+    function loadRecipientData() {
+        onValue(ref(db, 'parcels'), (snapshot) => {
+            const content = document.getElementById('recipient-content');
+            content.innerHTML = '';
+            snapshot.forEach((child) => {
+                const p = child.val();
+                if(p.receiver.toLowerCase().includes("alexis") || p.status === "Pending") {
+                    content.innerHTML += `<div class="card">
+                        <h3 style="color:var(--neon-blue)">Parcel Ready for Pickup</h3>
+                        <p>Locker 1 is currently <b>Occupied</b></p>
+                        <button class="btn btn-success">GENERATE QR CODE</button>
+                    </div>`;
+                }
+            });
+        });
+    }
+</script>
+</body>
+</html>
