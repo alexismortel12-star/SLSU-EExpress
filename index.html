@@ -2,245 +2,1332 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SLSU EExpress+ | Smart IoT Locker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SLSU EExpress+ | Eco-Tech Smart Locker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
+        /* * ============================================================
+         * PROJECT: SLSU EExpress+ Smart Cloud Locker
+         * VERSION: 10.0 (NATURE-TECH GLASSMORPHISM REVISION)
+         * LAYER 1: BRANDING, DEPTH & REACTIVE VARIABLES
+         * ============================================================
+         */
+
         :root {
-            --bg-dark: #0f172a;
-            --glass-bg: rgba(30, 41, 59, 0.98);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --neon-green: #00ff9d;
-            --neon-blue: #38bdf8;
-            --danger: #f43f5e;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
+            /* Primary Background Palette (Nature/Eco-Tech) */
+            --bg-dark: #02353C;       /* Dark Slate/Teal */
+            --bg-deep: #012126;       /* Darker shade for contrast */
+            --glass: rgba(193, 246, 237, 0.1); /* Light Mint Glass */
+            --glass-heavy: rgba(2, 53, 60, 0.85); /* Dark Slate Glass */
+            
+            /* Hardware State Logic Colors (Brightscout Palette) */
+            --neon-green: #2EAF7D;    /* Seafoam Green: Primary Action / Ready */
+            --neon-emerald: #449342;  /* Muted Sage: Secondary Status / Validation */
+            --neon-blue: #3FD0C9;     /* Bright Aqua: Phase 3 Link / Scanning Reticle */
+            --warning-gold: #fbbf24;  /* Transition / Action Required */
+            --danger-red: #ef4444;    /* Breach / Error */
+            
+            /* Typography & Depth */
+            --text-primary: #ffffff;
+            --text-secondary: #C1F6ED; /* Light Mint for secondary text */
+            --font-primary: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-terminal: 'Inter', 'Segoe UI', system-ui, sans-serif; /* Softened from monospace */
+            --border-dim: rgba(63, 208, 201, 0.2);
+            --border-bright: rgba(63, 208, 201, 0.5);
+            --shadow-deep: 0 25px 50px -12px rgba(1, 33, 38, 0.8);
+            --shadow-glow: 0 0 25px rgba(63, 208, 201, 0.4);
+            
+            /* Animation Timings */
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
         }
 
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
-        
-        /* --- AUTH LAYER --- */
-        #auth-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .auth-card { background: var(--glass-bg); padding: 40px; border-radius: 24px; border: 1px solid var(--glass-border); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-        
-        input, select { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 14px; border-radius: 10px; color: white; margin-bottom: 15px; box-sizing: border-box; font-size: 1rem; }
-        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem; margin-top: 10px; }
-        .btn-primary { background: var(--neon-blue); color: var(--bg-dark); }
-        .btn-success { background: var(--neon-green); color: var(--bg-dark); }
+        /* * ============================================================
+         * LAYER 2: GLOBAL ARCHITECTURE (AUTO-ADAPTIVE)
+         * ============================================================
+         */
 
-        /* --- APP CONTENT --- */
-        .main-app { display: none; flex: 1; width: 100%; height: 100vh; }
-        .sidebar { width: 280px; background: var(--glass-bg); border-right: 1px solid var(--glass-border); padding: 30px; display: flex; flex-direction: column; }
-        .content { flex: 1; padding: 40px; overflow-y: auto; background: rgba(0,0,0,0.3); }
-        
-        .nav-item { padding: 15px; margin-bottom: 10px; border-radius: 12px; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
-        .nav-item.active { background: rgba(56, 189, 248, 0.1); color: var(--neon-blue); font-weight: bold; }
-        
-        .card { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-        .activity-item { padding: 15px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
-        
-        .photo-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        #preview-img { width: 100%; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid var(--neon-blue); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
 
-        h2 { border-left: 4px solid var(--neon-green); padding-left: 15px; margin-bottom: 25px; }
+        /* --- THE ULTIMATE DESKTOP SCALING FIX --- */
+        html { font-size: 16px; } 
+        @media (min-width: 1200px) { html { font-size: 18px; } } 
+        @media (min-width: 1600px) { html { font-size: 22px; } } 
+        @media (min-width: 2500px) { html { font-size: 28px; } } 
+
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100dvh;
+            width: 100%;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: row; 
+        }
+
+        /* Custom Nature-Tech Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(1, 33, 38, 0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { 
+            background: rgba(46, 175, 125, 0.5); 
+            border-radius: 10px; 
+            box-shadow: inset 0 0 6px rgba(1, 33, 38, 0.8);
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
+
+        /* * ============================================================
+         * LAYER 3: SIDEBAR / NAVIGATION ENGINE
+         * ============================================================
+         */
+
+        .sidebar {
+            width: clamp(320px, 22vw, 450px);
+            height: 100%;
+            background: var(--glass-heavy);
+            border-right: 1px solid var(--border-dim);
+            padding: 60px 30px;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            flex-shrink: 0;
+            transition: all 0.5s var(--ease-out);
+            box-shadow: 10px 0 30px rgba(1, 33, 38, 0.8);
+            backdrop-filter: blur(15px);
+        }
+
+        .sidebar-logo {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            margin-bottom: 70px;
+            letter-spacing: -1px;
+            text-shadow: 0 0 15px rgba(63, 208, 201, 0.4);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-family: var(--font-primary);
+        }
+
+        .nav-item {
+            padding: 22px 25px;
+            margin-bottom: 15px;
+            border-radius: 22px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.4s var(--ease-out);
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .nav-item:hover {
+            background: rgba(193, 246, 237, 0.05);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(63, 208, 201, 0.15) 0%, transparent 100%);
+            color: var(--neon-blue);
+            border-left: 4px solid var(--neon-blue);
+            border-top: 1px solid var(--border-dim);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .icon { font-size: 1.5rem; filter: drop-shadow(0 0 5px currentColor); }
+
+        .btn-logout, #logoutBtn {
+            margin-top: auto;
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            font-weight: 800;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        #logoutBtn:hover { background: var(--danger-red); color: #fff; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+
+        #devResetBtn {
+            margin-top: auto; 
+            margin-bottom: 15px; 
+            background: rgba(251, 191, 36, 0.05); 
+            color: var(--warning-gold); 
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            font-weight: 900; 
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        #devResetBtn:hover { background: var(--warning-gold); color: #000; box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+
+        /* * ============================================================
+         * LAYER 4: CONTENT SCALING & GRID SYSTEM
+         * ============================================================
+         */
+
+        .content {
+            flex: 1;
+            height: 100%;
+            padding: clamp(30px, 5vw, 80px);
+            overflow-y: auto;
+            /* Sweeping, airy gradient transitioning from Teal to Seafoam */
+            background: radial-gradient(circle at top right, var(--neon-green) 0%, var(--bg-dark) 60%, var(--bg-deep) 100%);
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            font-weight: 900;
+            margin-bottom: 45px;
+            border-left: 12px solid var(--neon-blue);
+            padding-left: 25px;
+            letter-spacing: -1px;
+            line-height: 1;
+            text-shadow: 0 5px 15px rgba(1, 33, 38, 0.8);
+            color: var(--text-secondary);
+        }
+        h2 b { color: var(--text-primary); }
+
+        .locker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 35px;
+            margin-bottom: 40px;
+        }
+
+        /* * ============================================================
+         * LAYER 5: INTERACTIVE LOCKER CARDS (GLASSMORPHISM)
+         * ============================================================
+         */
+
+        .locker-card {
+            background: rgba(2, 53, 60, 0.4);
+            border: 1px solid rgba(193, 246, 237, 0.15);
+            border-top: 1px solid rgba(193, 246, 237, 0.3);
+            border-radius: 40px;
+            padding: 70px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s var(--ease-out);
+            cursor: pointer;
+            backdrop-filter: blur(25px);
+            box-shadow: 0 15px 35px rgba(1, 33, 38, 0.5);
+        }
+
+        .locker-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            border-color: var(--neon-blue);
+            background: rgba(2, 53, 60, 0.6);
+            box-shadow: 0 25px 50px rgba(1, 33, 38, 0.8), 0 0 30px rgba(63, 208, 201, 0.2);
+        }
+
+        .weight-badge {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(1, 33, 38, 0.9);
+            color: var(--neon-blue);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-family: var(--font-primary);
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            border: 1px solid var(--border-dim);
+            box-shadow: inset 0 0 10px rgba(63, 208, 201, 0.2);
+        }
+
+        /* LED Strip Status Dot */
+        .led-indicator {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            width: 12px;
+            height: 12px;
+            background: #1e293b;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .led-on { background: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); }
+
+        /* * ============================================================
+         * LAYER 6: HARDWARE LOGIC STATES
+         * ============================================================
+         */
+
+        .locker-available {
+            border-color: var(--neon-green) !important;
+            color: var(--text-primary) !important;
+            background: radial-gradient(circle at center, rgba(46, 175, 125, 0.1), transparent) !important;
+            animation: pulseGlow 4s infinite ease-in-out;
+        }
+
+        .locker-occupied {
+            background: rgba(1, 33, 38, 0.8) !important;
+            border-color: var(--neon-emerald) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .locker-warning {
+            border-color: var(--warning-gold) !important;
+            color: var(--warning-gold) !important;
+            animation: warningBlink 1s infinite alternate;
+        }
+
+        .locker-breach {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border-color: var(--danger-red) !important;
+            color: var(--danger-red) !important;
+            animation: shakeAlert 0.2s infinite linear;
+            box-shadow: inset 0 0 40px rgba(239, 68, 68, 0.2), 0 0 40px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        /* * ============================================================
+         * LAYER 7: SYSTEM OVERLAYS & DIALOGS
+         * ============================================================
+         */
+
+        .auth-card {
+            width: 95% !important;
+            max-width: 800px !important;
+            padding: 80px 60px !important;
+            background: var(--glass-heavy) !important;
+            backdrop-filter: blur(35px) !important;
+            border: 1px solid var(--border-bright) !important;
+            border-top: 2px solid var(--neon-blue) !important;
+            border-radius: 40px !important;
+            box-shadow: 0 30px 60px rgba(1, 33, 38, 0.9), 0 0 40px rgba(63, 208, 201, 0.2) !important;
+        }
+        .auth-card h1 { font-size: 4rem !important; margin-bottom: 10px !important; font-family: var(--font-primary); }
+        .auth-card p { font-size: 1.4rem !important; margin-bottom: 50px !important; }
+
+        .door-animation {
+            font-size: 8rem;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 0 30px var(--neon-blue));
+            animation: doorSwing 1.8s ease-in-out infinite alternate;
+        }
+
+        /* * ============================================================
+         * LAYER 8: MOBILE RESPONSIVE ENGINE (PHONE FIX)
+         * ============================================================
+         */
+
+        @media (max-width: 768px) {
+            body { display: block; position: relative; }
+
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: auto;
+                padding: 15px 10px;
+                flex-direction: row;
+                border-right: none;
+                border-top: 1px solid var(--border-dim);
+                justify-content: space-around;
+                align-items: center;
+                background: rgba(2, 53, 60, 0.98);
+                backdrop-filter: blur(25px);
+                z-index: 1000;
+                box-shadow: 0 -10px 30px rgba(1, 33, 38, 0.8);
+            }
+
+            .sidebar-logo, .nav-item span:not(.icon) { display: none; }
+
+            .nav-item {
+                margin-bottom: 0;
+                flex: 1;
+                justify-content: center;
+                font-size: 2.2rem;
+                background: none !important;
+                border: none !important;
+                padding: 10px;
+            }
+
+            .nav-item.active {
+                color: var(--neon-blue);
+                border: none !important;
+                background: radial-gradient(circle at center, rgba(63, 208, 201, 0.15), transparent) !important;
+                border-radius: 20px;
+                box-shadow: none;
+            }
+            
+            .nav-item.active .icon { filter: drop-shadow(0 0 10px var(--neon-blue)); transform: scale(1.1); }
+
+            .btn-logout, #logoutBtn {
+                position: absolute; top: 25px; right: 25px; width: auto; padding: 12px 20px; font-size: 0.85rem; margin-top: 0; z-index: 900;
+            }
+
+            #devResetBtn {
+                position: absolute; top: 25px; right: 130px; width: auto; padding: 12px 20px; font-size: 0.85rem; margin-top: 0; z-index: 900;
+            }
+
+            .content { height: 100dvh; width: 100%; padding: 30px 20px 120px 20px; overflow-y: auto; }
+            .locker-grid { grid-template-columns: 1fr; gap: 20px; }
+            h2 { font-size: 2.2rem; margin-bottom: 30px; }
+            .locker-card { padding: 50px 20px; }
+            .auth-card { width: 95% !important; max-width: none !important; padding: 50px 30px !important; }
+            .auth-card h1 { font-size: 3rem !important; }
+        }
+
+        /* * ============================================================
+         * LAYER 9: ANIMATION KEYFRAMES
+         * ============================================================
+         */
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: inset 0 0 0 transparent, 0 0 0 transparent; }
+            50% { box-shadow: inset 0 0 20px rgba(63, 208, 201, 0.15), 0 0 35px rgba(63, 208, 201, 0.2); }
+        }
+
+        @keyframes warningBlink {
+            from { opacity: 1; transform: scale(1); filter: brightness(1); }
+            to { opacity: 0.7; transform: scale(0.98); filter: brightness(0.8); }
+        }
+
+        @keyframes shakeAlert {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
+
+        @keyframes doorSwing {
+            from { transform: perspective(1000px) rotateY(0deg); }
+            to { transform: perspective(1000px) rotateY(-45deg); filter: drop-shadow(0 0 40px var(--neon-blue)); }
+        }
+
+        .alarm-active { animation: alarmBg 0.5s infinite alternate; }
+        @keyframes alarmBg {
+            from { background-color: var(--bg-dark); }
+            to { background-color: rgba(239, 68, 68, 0.3); }
+        }
+
+        /* * ============================================================
+         * LAYER 10: MISC COMPONENTS (PANES, INPUTS & BUTTONS)
+         * ============================================================
+         */
+
+        .pane { 
+            display: none; 
+            animation: slideUp 0.6s var(--ease-out); 
+            width: 100%;
+            max-width: 1400px; 
+            margin: 0 auto;
+        }
+
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(50px); filter: blur(10px); } 
+            to { opacity: 1; transform: translateY(0); filter: blur(0); } 
+        }
+
+        .card {
+            background: rgba(2, 53, 60, 0.4);
+            border: 1px solid rgba(193, 246, 237, 0.15);
+            border-top: 1px solid rgba(193, 246, 237, 0.3);
+            border-radius: 30px;
+            padding: clamp(30px, 4vw, 50px);
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(1, 33, 38, 0.4);
+            backdrop-filter: blur(25px);
+        }
+
+        /* Neumorphic Input Fields -> Frosted Glass */
+        input {
+            width: 100%;
+            padding: 26px 24px;
+            border-radius: 20px;
+            background: rgba(1, 33, 38, 0.5);
+            border: 1px solid var(--border-dim);
+            border-top: 1px solid rgba(0,0,0,0.4);
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            transition: all 0.3s var(--ease-out);
+            box-shadow: inset 0 4px 10px rgba(1, 33, 38, 0.6);
+            font-family: var(--font-primary);
+        }
+
+        input:focus {
+            border-color: var(--neon-blue);
+            background: rgba(1, 33, 38, 0.7);
+            box-shadow: inset 0 4px 10px rgba(1, 33, 38, 0.8), 0 0 20px rgba(63, 208, 201, 0.3);
+            outline: none;
+        }
+
+        /* Premium Gradient Buttons */
+        .btn {
+            width: 100%;
+            padding: 24px;
+            border-radius: 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.4s var(--ease-out);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            border: none;
+            font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
+            font-family: var(--font-primary);
+        }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-green) 100%); 
+            color: #ffffff; 
+            box-shadow: 0 10px 20px rgba(46, 175, 125, 0.3);
+        }
+
+        .btn-primary:hover { 
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(63, 208, 201, 0.5), 0 0 20px rgba(63, 208, 201, 0.4); 
+            filter: brightness(1.1);
+        }
+
+        .btn-success { 
+            background: linear-gradient(135deg, var(--neon-green) 0%, var(--neon-emerald) 100%); 
+            color: #ffffff; 
+            box-shadow: 0 10px 20px rgba(68, 147, 66, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(68, 147, 66, 0.5);
+        }
+
+        .btn-ghost { 
+            background: rgba(255,255,255,0.05); 
+            color: var(--text-primary); 
+            border: 1px solid var(--border-bright); 
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(63, 208, 201, 0.15);
+            transform: translateY(-3px);
+            color: #fff;
+            border-color: var(--neon-blue);
+        }
+
+        /* Animated Scanning Pulse Button */
+        .btn-pulse-green {
+            background: rgba(1, 33, 38, 0.6);
+            color: var(--text-primary);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px rgba(63, 208, 201, 0.4), inset 0 0 15px rgba(63, 208, 201, 0.2);
+            animation: readyPulse 2s infinite;
+        }
+        @keyframes readyPulse {
+            0% { box-shadow: 0 0 15px rgba(63, 208, 201, 0.4), inset 0 0 15px rgba(63, 208, 201, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(63, 208, 201, 0.8), inset 0 0 30px rgba(63, 208, 201, 0.5); border-color: #fff; color: #fff; }
+            100% { box-shadow: 0 0 15px rgba(63, 208, 201, 0.4), inset 0 0 15px rgba(63, 208, 201, 0.2); }
+        }
+
+        #qr-reader {
+            width: 100%;
+            border: 4px solid var(--neon-blue);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(63, 208, 201, 0.3);
+        }
+        #qr-reader video { object-fit: cover; }
+
+        .alarm-pulse { animation: alarmBackground 0.5s infinite; }
+        @keyframes alarmBackground {
+            0%, 100% { background-color: var(--bg-dark); }
+            50% { background-color: rgba(239, 68, 68, 0.3); }
+        }
+
+        #loading-overlay {
+            position: fixed; inset: 0; background: rgba(1, 33, 38, 0.95);
+            z-index: 90000; display: none; justify-content: center; align-items: center;
+            flex-direction: column; backdrop-filter: blur(20px);
+        }
+        .bolt { font-size: 5rem; color: var(--neon-blue); filter: drop-shadow(0 0 20px var(--neon-blue)); animation: lightningStrike 1.2s infinite; }
+        .loading-word {
+            margin-top: -10px; font-size: 2.8rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 5px; color: transparent; -webkit-text-stroke: 1px var(--neon-blue);
+            animation: textCharge 1.2s infinite;
+            font-family: var(--font-primary);
+        }
+
+        #invoice-overlay, #opening-overlay {
+            position: fixed; inset: 0; background: rgba(1, 33, 38, 0.95);
+            z-index: 80000; display: none; justify-content: center; align-items: center;
+            flex-direction: column; padding: 20px; backdrop-filter: blur(35px);
+        }
+
+        #toast-container { position: fixed; top: 30px; right: 30px; z-index: 10000; width: 340px; pointer-events: none; }
+        .toast { 
+            padding: 22px 30px; 
+            background: var(--glass-heavy); 
+            border-left: 6px solid var(--neon-blue); 
+            border-radius: 20px; 
+            color: white; 
+            margin-bottom: 15px; 
+            box-shadow: var(--shadow-deep);
+            transform: translateX(150%); 
+            transition: 0.6s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            pointer-events: auto;
+            font-weight: 700;
+            font-family: var(--font-primary);
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.error { border-left-color: var(--danger-red); }
+        .toast.success { border-left-color: var(--neon-green); }
+        
+        .main-app { display: none; flex: 1; width: 100%; height: 100dvh; overflow: hidden; flex-direction: row; }
+        .status-tag { padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 900; background: rgba(193, 246, 237, 0.1); border: 1px solid var(--border-dim); color: var(--text-secondary); }
     </style>
 </head>
 <body>
 
-<div id="auth-overlay">
+<div id="toast-container"></div>
+
+<div id="loading-overlay">
+    <div class="lightning-container">
+        <div class="bolt">⚡</div>
+        <h1 class="loading-word">SLSU EExpress+</h1>
+    </div>
+    <p id="loading-text" style="color: var(--neon-blue); font-family: var(--font-primary); font-weight: 900; letter-spacing: 4px; font-size: 0.85rem; margin-top: 20px;">Connecting to Cloud Service...</p>
+</div>
+
+<div id="invoice-overlay">
+    <div class="receipt-card" style="background: rgba(1, 33, 38, 0.95); color: var(--text-primary); border: 2px solid var(--neon-blue); padding: 30px; border-radius: 15px; width: 100%; max-width: 350px; font-family: var(--font-primary); box-shadow: 0 0 30px rgba(63, 208, 201, 0.3);">
+        <h2 style="text-align:center; border:none; margin:0; padding:0; color:var(--neon-blue);">EExpress+</h2>
+        <p style="text-align:center; font-size:0.85rem; margin-bottom:20px; color: var(--text-secondary);">Digital Transaction Receipt</p>
+        <div style="border-top:1px dashed var(--border-bright); border-bottom:1px dashed var(--border-bright); padding:15px 0; margin-bottom:20px; font-size:0.95rem;">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 5px;"><span>Transaction ID:</span><b id="inv-id">#---</b></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 5px;"><span>Locker Unit:</span><b id="inv-locker">00</b></div>
+            <div style="display:flex; justify-content:space-between;"><span>Date Processed:</span><b id="inv-date">--/--/--</b></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:1.3rem; font-weight:bold;">
+            <span>Amount Paid:</span><span id="inv-amount">₱0.00</span>
+        </div>
+        <button class="btn btn-primary" style="margin-top:25px; width:100%; border-radius:8px;" onclick="closeInvoice()">Acknowledge & Close</button>
+    </div>
+</div>
+
+<div id="opening-overlay" data-locker="">
+    <div class="door-animation">🚪</div>
+    <h1 class="opening-text" style="color:var(--neon-blue); font-weight:900; text-align: center; font-size: 2.5rem; font-family: var(--font-primary);">Locker Unlocked</h1>
+    <p id="deposit-instructions" style="color: var(--text-secondary); margin-top: 15px; font-size: 1.1rem; font-weight: 600; text-align: center; line-height: 1.5;">Please place the parcel inside.<br>System is monitoring weight.</p>
+    <div id="weight-confirm-icon" style="display:none; font-size: 4rem; margin: 20px;">📦✅</div>
+    <button id="btn-deposit-close" class="btn btn-success" style="display:none; width: 100%; max-width: 300px; margin-top: 30px; padding: 16px;" onclick="closeOpeningOverlay()">Waiting for Door Closure...</button>
+</div>
+
+<div id="auth-overlay" style="position:fixed; inset:0; background:var(--bg-dark); z-index:100000; display:flex; justify-content:center; align-items:center; padding:20px;">
     <div class="auth-card">
-        <div style="font-size: 3rem; margin-bottom: 15px;">🚀</div>
-        <h1 style="margin:0; color:var(--neon-green); font-size: 1.8rem; letter-spacing: 2px;">SLSU EExpress+</h1>
-        <p style="color:var(--text-muted); margin-bottom: 30px;">Cloud Logistics Authentication</p>
-        
-        <input type="email" id="login-email" placeholder="Email Address" value="alexismortel12@gmail.com">
-        <input type="password" id="login-pass" placeholder="Enter Password">
-        <button class="btn btn-primary" onclick="handleLogin()">SECURE LOGIN</button>
+        <div style="font-size: 4.5rem; margin-bottom: 15px; filter: drop-shadow(0 0 15px var(--neon-blue));">⚡</div>
+        <h1 style="color:var(--neon-blue); margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -1px;">EExpress+</h1>
+        <p style="color:var(--text-secondary); margin-bottom: 40px; font-size: 1.2rem; font-weight: 600; font-family: var(--font-primary);">Logistics Management System</p>
+        <input type="email" id="emailField" placeholder="Account Email" value="alexismortel12@gmail.com">
+        <input type="password" id="passwordField" placeholder="Account Password">
+        <button class="btn btn-primary" id="loginBtn">Secure Login</button>
     </div>
 </div>
 
 <div class="main-app" id="app-body">
     <div class="sidebar">
-        <div style="font-size: 1.5rem; font-weight: 900; color: var(--neon-green); margin-bottom: 40px;">⚡ EExpress+</div>
+        <div class="sidebar-logo">⚡ EExpress+</div>
+        <div id="nav-courier" style="display:none; width: 100%; flex-direction: inherit;">
+            <div class="nav-item active" id="nav-dash" onclick="showPane('c-dashboard')">
+                <span class="icon">📊</span> <span>Dashboard Overview</span>
+            </div>
+            <div class="nav-item" id="nav-drop" onclick="showPane('c-drop-off')">
+                <span class="icon">📦</span> <span>New Drop-off</span>
+            </div>
+        </div>
+        <div id="nav-recipient" style="display:none; width: 100%; flex-direction: inherit;">
+            <div class="nav-item active" id="nav-rec" onclick="showPane('r-dashboard')">
+                <span class="icon">📥</span> <span>Active Retrievals</span>
+            </div>
+            <div class="nav-item" id="nav-his" onclick="showPane('r-history')">
+                <span class="icon">📜</span> <span>Transaction History</span>
+            </div>
+        </div>
         
-        <div id="nav-courier" style="display:none;">
-            <div class="nav-item active" onclick="showPane('c-dashboard')">Activities Dashboard</div>
-            <div class="nav-item" onclick="showPane('c-drop-off')">Drop-off Parcel</div>
-        </div>
-
-        <div id="nav-recipient" style="display:none;">
-            <div class="nav-item active">My Retrieval Board</div>
-        </div>
-
-        <button class="btn" style="margin-top:auto; background:var(--danger); color:white" onclick="location.reload()">LOGOUT</button>
+        <button class="btn" id="devResetBtn">🛠️ Factory Reset</button>
+        <button class="btn btn-danger" id="logoutBtn">End Session</button>
     </div>
 
     <div class="content">
-        <div id="c-dashboard" class="pane" style="display:none;">
-            <h2>Courier <b>Operations</b></h2>
-            <button class="btn btn-success" style="width:auto; padding:15px 30px;" onclick="showPane('c-drop-off')">+ NEW DROP OFF PARCEL</button>
-            
-            <div style="margin-top:40px;">
-                <h3>Pending Activities</h3>
-                <div class="card" id="pending-list">
-                    <p style="color:var(--text-muted)">Scanning for pending deliveries...</p>
-                </div>
-
-                <h3>Past Drop-off Activities</h3>
-                <div class="card" id="past-list">
-                    <p style="color:var(--text-muted)">No history found.</p>
-                </div>
+        <div id="c-dashboard" class="pane">
+            <h2>Courier <b>Dashboard</b></h2>
+            <div class="card" style="background: rgba(63, 208, 201, 0.1); border-color: var(--neon-blue);">
+                <p style="font-size:0.85rem; font-weight:900; opacity:0.8; color: var(--neon-blue); font-family: var(--font-primary);">Total Collected Revenue</p>
+                <h1 style="font-size:3rem; color: #fff;">₱ <span id="total-rev">0.00</span></h1>
             </div>
-        </div>
-
-        <div id="c-drop-off" class="pane" style="display:none;">
-            <h2>Register <b>New Parcel</b></h2>
             <div class="card">
-                <label>Receiver Information</label>
-                <input type="text" id="rec-name" placeholder="Full Name">
-                <input type="text" id="rec-contact" placeholder="Contact Number">
-                
-                <label>Parcel Documentation</label>
-                <div class="photo-options">
-                    <button class="btn" style="background:#475569; color:white" onclick="document.getElementById('file-input').click()">GALLERY</button>
-                    <button class="btn" style="background:#475569; color:white" onclick="document.getElementById('file-input-cam').click()">TAKE PHOTO</button>
-                </div>
-                <input type="file" id="file-input" accept="image/*" style="display:none" onchange="previewPhoto(this)">
-                <input type="file" id="file-input-cam" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)">
-                
-                <img id="preview-img" src="" alt="Parcel Preview">
-                
-                <button class="btn btn-primary" style="margin-top:30px" onclick="submitParcel()">COMPLETE REGISTRATION</button>
+                <h3 style="margin-bottom:20px; color:var(--text-secondary); font-size: 1.3rem; font-family: var(--font-primary);">Pending Deliveries</h3>
+                <div id="pending-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            </div>
+            <button class="btn btn-ghost" onclick="toggleCourierHistory()">📜 View Completed Transactions</button>
+            <div class="card" id="courier-history-card" style="display:none; margin-top:15px;">
+                <div id="courier-past-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
             </div>
         </div>
 
-        <div id="r-dashboard" class="pane" style="display:none;">
-            <h2>Recipient <b>Retrieval Board</b></h2>
-            <div id="recipient-content">
-                <p style="color:var(--text-muted)">Looking for your parcels...</p>
+        <div id="c-drop-off" class="pane">
+            <h2>Process <b>Drop-off</b></h2>
+            <div id="drop-step-1">
+                <div class="card">
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px; font-weight:900; font-family: var(--font-primary);">Step 1. Billing Information</p>
+                    <input type="number" id="amount-due" placeholder="Amount (₱)" value="2.00" style="font-size:1.8rem; text-align:center; color:var(--neon-blue); font-weight: bold;">
+                    <div style="display:flex; gap:15px; margin-bottom:25px;">
+                        <button id="btn-pre" class="btn btn-ghost" style="flex:1; border-color:var(--neon-blue);" onclick="setPayment('Prepaid')">Prepaid Payment</button>
+                        <button id="btn-pay" class="btn btn-ghost" style="flex:1;" onclick="setPayment('Pay Later')">Pay on Retrieval</button>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px; font-weight:900; font-family: var(--font-primary);">Step 2. Recipient Details</p>
+                    <input type="text" id="rec-name" placeholder="Full Name of Recipient">
+                    <input type="tel" id="rec-phone" placeholder="Contact Number (e.g., 09...)">
+                    
+                    <p style="font-size:0.85rem; color:var(--warning-gold); margin-top:15px; margin-bottom:10px; font-weight:900; font-family: var(--font-primary);">Step 3. Courier Details</p>
+                    <input type="text" id="cour-name" placeholder="Courier Full Name">
+                    <input type="tel" id="cour-phone" placeholder="Courier Contact or Plate Number">
+                    
+                    <button class="btn btn-ghost" style="margin-bottom:20px; margin-top: 10px;" onclick="document.getElementById('f-cam').click()">📸 Capture Parcel Image</button>
+                    <input type="file" id="f-cam" capture="environment" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+                    <img id="preview-img" style="width: 100%; border-radius: 15px; margin-top: 15px; margin-bottom: 20px; border: 2px solid var(--border-bright); display: none; object-fit: cover; max-height: 250px;">
+                    <button class="btn btn-primary" onclick="proceedToGrid()">Proceed to Locker Selection</button>
+                </div>
             </div>
+            <div id="drop-step-2" style="display:none;">
+                <div class="locker-grid">
+                    <div id="grid-l1" class="locker-card locker-available" onclick="selectLocker(1)">
+                        <strong style="font-size: 1.5rem; font-family: var(--font-primary);">Locker 01</strong><br><small id="status-l1" style="font-size: 1rem; margin-top: 5px; display: block;">Available</small>
+                        <span id="weight-l1" class="weight-badge">0g</span>
+                    </div>
+                    <div id="grid-l2" class="locker-card locker-available" onclick="selectLocker(2)">
+                        <strong style="font-size: 1.5rem; font-family: var(--font-primary);">Locker 02</strong><br><small id="status-l2" style="font-size: 1rem; margin-top: 5px; display: block;">Available</small>
+                        <span id="weight-l2" class="weight-badge">0g</span>
+                    </div>
+                </div>
+                <button class="btn btn-ghost" style="margin-top: 15px;" onclick="backToStep1()">Return to Edit Details</button>
+            </div>
+        </div>
+
+        <div id="r-dashboard" class="pane">
+            <div class="wallet-banner" style="background: rgba(2, 53, 60, 0.6); border: 1px solid var(--border-bright); padding: 25px; border-radius: 24px; margin-bottom: 25px; backdrop-filter: blur(10px);">
+                <p style="font-size:0.85rem; font-weight:900; opacity:0.8; color: var(--text-secondary); font-family: var(--font-primary);">Available Wallet Balance</p>
+                <h1 style="font-size:3rem; color: #fff;">₱ <span id="wallet-bal">0.00</span></h1>
+            </div>
+            <div id="scanner-power-indicator" style="display:none; background:rgba(63, 208, 201, 0.1); padding:15px; border-radius:14px; margin-bottom:20px; border-left:4px solid var(--neon-blue);">
+                <small style="color:var(--text-primary); font-weight:900; font-size: 0.95rem; font-family: var(--font-primary);">Hardware Synced: Awaiting QR Scan on the Locker Monitor.</small>
+            </div>
+            <h2>Pending <b>Retrievals</b></h2>
+            <div id="recipient-content" style="display: flex; flex-direction: column; gap: 15px;"></div>
+        </div>
+
+        <div id="r-history" class="pane">
+            <h2>Transaction <b>History</b></h2>
+            <div class="card" id="history-content" style="display: flex; flex-direction: column; gap: 15px;"></div>
         </div>
     </div>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getDatabase, ref, onValue, push, update, get, runTransaction, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
-    // --- PASTE YOUR CONFIG FROM FIREBASE CONSOLE HERE ---
     const firebaseConfig = {
-        apiKey: "AIzaSyC0E-AQVSm6CN4MQwPHgwH8SkjrDmFpTJk",
-        authDomain: "slsu-eexpress-f3c77.firebaseapp.com",
-        databaseURL: "https://slsu-eexpress-f3c77-default-rtdb.firebaseio.com",
-        projectId: "slsu-eexpress-f3c77",
-        storageBucket: "slsu-eexpress-f3c77.firebasestorage.app",
-        messagingSenderId: "801132927328",
-        appId: "1:801132927328:web:fc74e0aaf21ea2d3046605"
+        apiKey: "AIzaSyCA9WYXtv_-SBu0mXuenjIweUjgm8qza9Y",
+        authDomain: "slsu-eexpress-plus.firebaseapp.com",
+        databaseURL: "https://slsu-eexpress-plus-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "slsu-eexpress-plus",
+        storageBucket: "slsu-eexpress-plus.firebasestorage.app",
+        messagingSenderId: "1077938592700",
+        appId: "1:1077938592700:web:0616ecbb43c611c8c269b9"
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
     const db = getDatabase(app);
+    const storage = getStorage(app);
 
-    // --- 1. LOGIN LOGIC ---
-    window.handleLogin = () => {
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
+    // --- GLOBAL STATE ---
+    let systemInit = false;
+    let lastOccupiedState = { 1: false, 2: false };
+    let previousWeightTracker = { 1: 0, 2: 0 }; // Used for Phase 4 Breach Detection
+    let selPayment = "Prepaid";
+    let walletBal = null;
+    let securityTimer = null;
+    let html5QrcodeScanner = null; // Phase 3 Scanner
 
-        if (email === "alexismortel12@gmail.com" && pass === "121203") {
-            startApp('courier');
-        } else if (email === "alexismortel12@gmail.com" && pass === "051923") {
-            startApp('recipient');
-        } else {
-            alert("Invalid Credentials. Please check your password.");
+    // --- UI HELPERS ---
+    window.notify = (msg, type = "info") => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span style="font-family: var(--font-primary);">ℹ️</span> ${msg}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+        }, 3500);
+    };
+
+    window.toggleLoader = (show, text = "Connecting to Service...") => {
+        const loader = document.getElementById('loading-overlay');
+        const lText = document.getElementById('loading-text');
+        if (lText) lText.innerText = text;
+        if (loader) loader.style.display = show ? 'flex' : 'none';
+    };
+
+    // --- SECURITY ALARM LOGIC (PHASE 1 & 3 FINAL SECURING) ---
+    // Timer is 10 seconds. It checks the door sensor specifically.
+    window.startDoorTimer = (n, phaseState) => {
+        if (securityTimer) clearTimeout(securityTimer);
+        securityTimer = setTimeout(async () => {
+            const snap = await get(ref(db, `system_control/locker_${n}`));
+            const state = snap.val();
+            // If 10 seconds have passed and the door is STILL OPEN, sound alarm
+            if (state.door_state === "OPEN") {
+                await update(ref(db, `system_control/locker_${n}`), { buzzer_alarm: true });
+                notify(`Security Alert: Locker 0${n} door has been left open.`, "error");
+                document.body.classList.add("alarm-pulse");
+            }
+        }, 10000); // 10 Second Security Window
+    };
+
+    window.stopDoorAlarm = async (n) => {
+        if (securityTimer) clearTimeout(securityTimer);
+        document.body.classList.remove("alarm-pulse");
+        await update(ref(db, `system_control/locker_${n}`), {
+            buzzer_alarm: false
+        });
+    };
+
+    // --- AUTHENTICATION & SESSION MANAGEMENT ---
+    document.getElementById("loginBtn").onclick = async () => {
+        const email = document.getElementById("emailField").value;
+        const pass = document.getElementById("passwordField").value;
+        if(!email || !pass) return notify("Please enter your account credentials.", "error");
+
+        toggleLoader(true, "Authenticating User...");
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+            const role = (userCredential.user.uid === "CzTMNl1oIwefB1t6iuVa6Cg65dD3") ? "courier" : "recipient";
+            localStorage.setItem("userRole", role);
+            notify("Login Successful.", "success");
+            location.reload();
+        } catch (e) {
+            toggleLoader(false);
+            notify("Authentication failed. Check credentials.", "error");
         }
     };
 
-    function startApp(role) {
-        document.getElementById('auth-overlay').style.display = 'none';
-        document.getElementById('app-body').style.display = 'flex';
-        document.getElementById('nav-' + role).style.display = 'block';
-        showPane(role === 'courier' ? 'c-dashboard' : 'r-dashboard');
-        
-        if(role === 'courier') loadCourierData();
-        if(role === 'recipient') loadRecipientData();
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            let role = localStorage.getItem("userRole");
+            if (!role) {
+                role = (user.uid === "CzTMNl1oIwefB1t6iuVa6Cg65dD3") ? "courier" : "recipient";
+                localStorage.setItem("userRole", role);
+            }
+            window.userRole = role;
+            
+            document.getElementById("auth-overlay").style.display = "none";
+            document.getElementById("app-body").style.display = "flex";
+            document.getElementById("nav-courier").style.display = window.userRole === "courier" ? "flex" : "none";
+            document.getElementById("nav-recipient").style.display = window.userRole === "recipient" ? "flex" : "none";
+            showPane(window.userRole === "courier" ? "c-dashboard" : "r-dashboard");
+            startGlobalListeners();
+        } else {
+            document.getElementById("auth-overlay").style.display = "flex";
+            document.getElementById("app-body").style.display = "none";
+        }
+    });
+
+    // --- CORE SYSTEM LISTENERS ---
+    function startGlobalListeners() {
+        const userUID = auth.currentUser.uid;
+
+        onValue(ref(db, `user_wallets/${userUID}`), (snap) => {
+            const val = snap.val();
+            if (val === null) {
+                walletBal = 100.00;
+                set(ref(db, `user_wallets/${userUID}`), 100.00);
+            } else { walletBal = parseFloat(val); }
+            const balUI = document.getElementById('wallet-bal');
+            if(balUI) balUI.innerText = walletBal.toFixed(2);
+        });
+
+        onValue(ref(db, "system_stats/total_revenue"), (snap) => {
+            const rev = snap.val() || 0;
+            const el = document.getElementById('total-rev');
+            if(el) el.innerText = rev.toFixed(2);
+        });
+
+        // Advanced Hardware State Monitor (Acts as Cloud Coordinator for Door & LED Logic)
+        onValue(ref(db, "system_control"), (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            [1, 2].forEach(num => {
+                const locker = data[`locker_${num}`];
+                const card = document.getElementById(`grid-l${num}`);
+                const statusLabel = document.getElementById(`status-l${num}`);
+                const weightBadge = document.getElementById(`weight-l${num}`);
+                const overlay = document.getElementById('opening-overlay');
+
+                if (card && locker) {
+                    // Update weight visually
+                    if (weightBadge) weightBadge.innerText = `${Math.round(locker.weight_status)}g`;
+
+                    // ==========================================
+                    // PHASE 4: Anti-Theft / Breach State Logic
+                    // ==========================================
+                    if (locker.state === "DROPPING_OFF" && previousWeightTracker[num] > 50 && locker.weight_status < 10 && locker.door_state === "OPEN") {
+                        // Weight was detected but removed while door is still open and not secured
+                        update(ref(db, `system_control/locker_${num}`), { security_status: "BREACH", buzzer_alarm: true });
+                    }
+
+                    // Handle Base Visual States
+                    if (locker.security_status === "BREACH") {
+                        card.className = "locker-card locker-breach";
+                        if(statusLabel) statusLabel.innerText = "System Breach";
+                        if(systemInit) notify(`Security Alert: Locker 0${num} parcel was improperly removed!`, "error");
+                        document.body.classList.add("alarm-pulse");
+                    }
+                    else if (locker.state === "DROPPING_OFF") {
+                        card.className = "locker-card locker-warning";
+                        if(statusLabel) statusLabel.innerText = "Detecting Parcel...";
+                        
+                        if (overlay.style.display === 'flex') {
+                            if (locker.weight_status > 50) {
+                                document.getElementById('deposit-instructions').innerHTML = "Parcel weight verified.<br>Please close the door to complete drop-off.";
+                                document.getElementById('weight-confirm-icon').style.display = 'block';
+                                document.getElementById('btn-deposit-close').style.display = 'block';
+                            } else {
+                                document.getElementById('deposit-instructions').innerHTML = "Locker is ready.<br>Please place the parcel inside.";
+                                document.getElementById('weight-confirm-icon').style.display = 'none';
+                                document.getElementById('btn-deposit-close').style.display = 'none';
+                            }
+                        }
+
+                        // ==========================================
+                        // PHASE 1: Final Securing & LED OFF (Deposit)
+                        // ==========================================
+                        if (locker.weight_status > 50 && locker.door_state === "CLOSED") {
+                            update(ref(db, `system_control/locker_${num}`), {
+                                lock_command: "LOCKED",
+                                led_state: false,
+                                is_occupied: true,
+                                state: "OCCUPIED",
+                                buzzer_alarm: false,
+                                security_status: "SECURE"
+                            });
+                            if (securityTimer) clearTimeout(securityTimer);
+                            document.body.classList.remove("alarm-pulse");
+                            
+                            if (window.userRole === "courier") {
+                                overlay.style.display = 'none';
+                            }
+                        }
+                    }
+                    else if (locker.state === "PICKING_UP") {
+                        card.className = "locker-card locker-warning";
+                        if(statusLabel) statusLabel.innerText = "Awaiting Retrieval...";
+                        
+                        // ==========================================
+                        // PHASE 3: Final Securing & LED OFF (Retrieval)
+                        // ==========================================
+                        if (locker.weight_status < 10 && locker.door_state === "CLOSED") {
+                            update(ref(db, `system_control/locker_${num}`), {
+                                lock_command: "LOCKED",
+                                led_state: false,
+                                is_occupied: false,
+                                state: "AVAILABLE",
+                                buzzer_alarm: false
+                            });
+                            if (securityTimer) clearTimeout(securityTimer);
+                            document.body.classList.remove("alarm-pulse");
+                        }
+                    }
+                    else if (locker.is_occupied) {
+                        card.className = "locker-card locker-occupied";
+                        if(statusLabel) statusLabel.innerText = "Secured";
+                        document.body.classList.remove("alarm-pulse");
+                    }
+                    else {
+                        card.className = "locker-card locker-available";
+                        if(statusLabel) statusLabel.innerText = "Available";
+                        document.body.classList.remove("alarm-pulse");
+                    }
+
+                    // Scanner Indicator
+                    if (window.userRole === 'recipient') {
+                        const scIndicator = document.getElementById('scanner-power-indicator');
+                        if (locker.tft_display_state === "DISPLAYING_QR" || locker.state === "PICKING_UP") {
+                            if(scIndicator) scIndicator.style.display = 'block';
+                        } else {
+                            if(scIndicator) scIndicator.style.display = 'none';
+                        }
+                    }
+
+                    if (systemInit && lastOccupiedState[num] === true && !locker.is_occupied) {
+                        notify(`Locker 0${num} has been successfully cleared and is now available.`, "success");
+                    }
+                    
+                    // Update trackers
+                    lastOccupiedState[num] = locker.is_occupied;
+                    previousWeightTracker[num] = locker.weight_status;
+                }
+            });
+            systemInit = true;
+        });
+
+        // RECIPIENT 4-PHASE LOGIC
+        onValue(ref(db, "parcels"), (snapshot) => {
+            const pending = document.getElementById("pending-list");
+            const courierHist = document.getElementById("courier-past-list");
+            const recipientActive = document.getElementById("recipient-content");
+            const recipientHist = document.getElementById("history-content");
+
+            if (pending) pending.innerHTML = "";
+            if (courierHist) courierHist.innerHTML = "";
+            if (recipientActive) recipientActive.innerHTML = "";
+            if (recipientHist) recipientHist.innerHTML = "";
+
+            snapshot.forEach((child) => {
+                const p = child.val();
+                const id = child.key;
+                
+                const activityHtml = `<div class="activity-item" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-dim); padding-bottom:15px; margin-bottom: 15px;">
+                    <div>
+                        <span style="font-size:1.2rem; font-weight:bold; color:var(--text-primary); font-family: var(--font-primary);">${p.receiver}</span> <span style="color:var(--text-secondary);">(Locker 0${p.locker})</span><br>
+                        <small style="color:var(--text-secondary); font-size:0.95rem; display:block; margin-top:5px; font-family: var(--font-primary);">Assigned Courier: ${p.courier_name || 'Unassigned'}</small>
+                        <small style="color:var(--text-secondary); font-size:0.85rem; font-family: var(--font-primary);">Processed Time: ${p.timestamp}</small>
+                    </div>
+                    <span class="status-tag">${p.status}</span>
+                </div>`;
+
+                if (window.userRole === "courier") {
+                    if (p.status === "Picked Up" || p.status === "Completed" || p.status === "Rejected") courierHist.innerHTML += activityHtml;
+                    else pending.innerHTML += activityHtml;
+                } else {
+                    if (p.status === "Picked Up" || p.status === "Completed" || p.status === "Rejected") {
+                        recipientHist.innerHTML += activityHtml;
+                    } 
+                    // PHASE 2: THE DIGITAL ARRIVAL & VERIFICATION
+                    else if (p.status === "Awaiting Verification" || p.status === "AWAITING_CONFIRMATION") {
+                        recipientActive.innerHTML += `
+                            <div class="card" style="border-left: 4px solid var(--warning-gold);">
+                                <h3 style="font-family: var(--font-primary); color: var(--warning-gold); margin-bottom: 15px;">Action Required</h3>
+                                <img src="${p.photo}" style="width:100%; border-radius:15px; margin-bottom:15px; border: 2px solid var(--border-dim);">
+                                <p style="font-size:1.4rem; margin-bottom:5px; font-weight:bold; color: #fff;">Inbound Parcel for: ${p.receiver}</p>
+                                
+                                <div style="background: rgba(251, 191, 36, 0.05); border: 1px solid var(--border-dim); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                                    <p style="font-size:1rem; color: var(--text-secondary); margin-bottom: 5px; font-family: var(--font-primary);">Delivery Rider: ${p.courier_name || 'N/A'}</p>
+                                    <p style="font-size:0.9rem; color: var(--text-secondary); font-family: var(--font-primary);">Contact Information: ${p.courier_phone || 'N/A'}</p>
+                                </div>
+                                <p style="font-size:1.1rem; color: #fff; margin-bottom: 15px; text-align: center;">Please confirm if this is your expected delivery.</p>
+                                <div style="display:flex; gap:12px;">
+                                    <button class="btn btn-success" onclick="vfy('${id}', true, '${p.payment_status}', ${p.amount}, ${p.locker})">Confirm Ownership</button>
+                                    <button class="btn btn-danger" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-red); border:1px solid var(--danger-red);" onclick="vfy('${id}', false, '', 0, ${p.locker})">Not My Parcel</button>
+                                </div>
+                            </div>`;
+                    } 
+                    // PHASE 2: PAYMENT INTERCEPTION
+                    else if (p.status === "Verified_Unpaid") {
+                        recipientActive.innerHTML += `
+                            <div class="card" style="border-color:var(--danger-red)">
+                                <h3 style="margin-bottom: 15px; font-family:var(--font-primary); color:var(--danger-red);">Pending Balance: ₱${p.amount}</h3>
+                                <button class="btn btn-primary" style="background:var(--danger-red); box-shadow:0 0 15px rgba(239, 68, 68, 0.3);" onclick="payWallet('${id}', ${p.amount})">Pay Outstanding Fee (₱${p.amount})</button>
+                            </div>`;
+                    }
+                    // PHASE 2 & 3: THE "READY TO SCAN" HANDSHAKE
+                    else if (p.status === "Verified" || p.status === "READY_TO_SCAN") {
+                        recipientActive.innerHTML += `
+                            <div class="card" style="border-color: var(--neon-blue); text-align: center;">
+                                <h3 style="margin-bottom: 15px; font-family: var(--font-primary); color: var(--neon-blue);">Ready for Retrieval</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: 25px;">Please stand directly in front of Locker 0${p.locker} and ensure the monitor is visible.</p>
+                                <button class="btn btn-pulse-green" onclick="triggerHandshake('${id}', ${p.locker}, '${p.token}')">Ready to Scan Hardware</button>
+                            </div>`;
+                    }
+                    // PHASE 3 (ACTIVE SCANNER VIEW)
+                    else if (p.status === "SCANNING") {
+                        recipientActive.innerHTML += `
+                            <div class="card" style="border-color: var(--neon-blue);">
+                                <h3 style="text-align: center; margin-bottom: 15px; font-family: var(--font-primary); color: var(--neon-blue);">Hardware Connection Active</h3>
+                                <p style="text-align: center; color: var(--text-primary); margin-bottom: 15px;">Please point your camera at the QR code displayed on the locker screen.</p>
+                                <div id="qr-reader"></div>
+                                <button class="btn btn-ghost" style="margin-top: 20px;" onclick="abortScan('${id}', ${p.locker})">Cancel Scan</button>
+                            </div>`;
+                        
+                        // Initialize scanner if not already running
+                        setTimeout(() => startScanner(id, p.locker, p.token), 300);
+                    }
+                }
+            });
+        });
     }
 
-    window.showPane = (id) => {
-        document.querySelectorAll('.pane').forEach(p => p.style.display = 'none');
-        document.getElementById(id).style.display = 'block';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    // --- PHASE 1 -> PHASE 2 VERIFICATION & REJECTION ---
+    window.vfy = (id, isMine, payStatus, amount, lockerId) => {
+        if (isMine) {
+            if (payStatus === 'Pending' && amount > 0) {
+                update(ref(db, `parcels/${id}`), { status: "Verified_Unpaid" });
+                notify("Parcel details verified. Please clear your balance to continue.", "success");
+            } else {
+                update(ref(db, `parcels/${id}`), { status: "READY_TO_SCAN" });
+                notify("Parcel details verified. You may proceed to retrieval.", "success");
+            }
+        } else {
+            if (confirm("Are you sure you want to reject this parcel? This action will notify the courier to retrieve the item.")) {
+                update(ref(db, `parcels/${id}`), { status: "Rejected" });
+                // Notifying courier via log update
+                notify("The parcel has been marked as rejected. The courier has been notified.", "error");
+            }
+        }
     };
 
-    // --- 2. COURIER LOGIC ---
+    // --- RECIPIENT WALLET LOGIC ---
+    window.payWallet = async (id, cost) => {
+        if (walletBal >= cost) {
+            toggleLoader(true, "Processing Payment...");
+            setTimeout(async () => {
+                const userUID = auth.currentUser.uid;
+                const newBal = walletBal - cost;
+                await set(ref(db, `user_wallets/${userUID}`), newBal);
+                await update(ref(db, `parcels/${id}`), { payment_status: 'Completed', status: 'READY_TO_SCAN' });
+                runTransaction(ref(db, "system_stats/total_revenue"), (current) => (current || 0) + cost);
+
+                document.getElementById('inv-id').innerText = id.substring(1, 8).toUpperCase();
+                document.getElementById('inv-locker').innerText = `0X`;
+                document.getElementById('inv-amount').innerText = `₱${cost}`;
+                document.getElementById('inv-date').innerText = new Date().toLocaleDateString();
+
+                toggleLoader(false);
+                document.getElementById('invoice-overlay').style.display = 'flex';
+                notify("Payment processed successfully.", "success");
+            }, 1500);
+        } else { notify("Insufficient wallet balance for this transaction.", "error"); }
+    };
+    window.closeInvoice = () => document.getElementById('invoice-overlay').style.display = 'none';
+
+    // --- PHASE 2 -> 3: TRIGGER THE HANDSHAKE (QR ON TFT) ---
+    window.triggerHandshake = async (id, lockerNum, tokenVal) => {
+        await update(ref(db, `system_control/locker_${lockerNum}`), {
+            tft_display_state: "DISPLAYING_QR",
+            current_qr_hash: tokenVal, 
+            scanner_power: true
+        });
+        
+        await update(ref(db, `parcels/${id}`), { status: "SCANNING" });
+        notify("Hardware monitor activated. Scanning initiated.", "success");
+    };
+
+    // --- PHASE 3: HTML5 CAMERA SCANNER START ---
+    function startScanner(parcelId, lockerNum, expectedToken) {
+        if(html5QrcodeScanner) return; 
+        
+        html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+        
+        html5QrcodeScanner.render(async (scannedText) => {
+            // PHASE 3: HARDWARE EXECUTION ON SUCCESSFUL SCAN
+            if (scannedText === expectedToken) {
+                html5QrcodeScanner.clear();
+                html5QrcodeScanner = null;
+                
+                notify("Hardware connection validated. Unlocking door.", "success");
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]); 
+                
+                // Trigger Hardware Solenoid & Turn ON LED
+                await update(ref(db, `system_control/locker_${lockerNum}`), {
+                    lock_command: "UNLOCKED",
+                    state: "PICKING_UP",
+                    led_state: true, // Turn LED on for withdrawal
+                    tft_display_state: "STANDBY",
+                    current_qr_hash: "EMPTY"
+                });
+                
+                await update(ref(db, `parcels/${parcelId}`), { status: "Completed" });
+                startDoorTimer(lockerNum, "PICKING_UP"); // Start 10s countdown for closing door
+            } else {
+                notify("Unrecognized QR Code. Please try again.", "error");
+            }
+        }, (error) => {
+            // Background scanning errors, silently ignore
+        });
+    }
+
+    // Abort scan manually
+    window.abortScan = async (id, lockerNum) => {
+        if(html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+        }
+        await update(ref(db, `system_control/locker_${lockerNum}`), {
+            tft_display_state: "STANDBY",
+            scanner_power: false
+        });
+        await update(ref(db, `parcels/${id}`), { status: "READY_TO_SCAN" });
+        notify("Scanner process canceled.", "info");
+    };
+
+    // --- COURIER ACTIONS (PHASE 1) ---
+    window.setPayment = (type) => {
+        selPayment = type;
+        document.getElementById('btn-pre').style.borderColor = (type === 'Prepaid') ? 'var(--neon-blue)' : 'var(--border-dim)';
+        document.getElementById('btn-pay').style.borderColor = (type === 'Pay Later') ? 'var(--neon-blue)' : 'var(--border-dim)';
+    };
+
     window.previewPhoto = (input) => {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const img = document.getElementById('preview-img');
-                img.src = e.target.result;
-                img.style.display = 'block';
+                const img = document.getElementById("preview-img");
+                img.src = e.target.result; img.style.display = "block";
             };
             reader.readAsDataURL(input.files[0]);
         }
     };
 
-    window.submitParcel = () => {
-        const name = document.getElementById('rec-name').value;
-        if(!name) return alert("Please fill up Receiver Name");
-
-        // Step 1: Tell ESP32 to unlock
-        update(ref(db, 'system_control/locker_1'), {
-            lock_command: "UNLOCKED",
-            is_occupied: false
-        });
-
-        // Step 2: Push to Pending list
-        const newParcelRef = push(ref(db, 'parcels'));
-        set(newParcelRef, {
-            receiver: name,
-            contact: document.getElementById('rec-contact').value,
-            status: "Pending",
-            timestamp: new Date().toISOString()
-        });
-
-        alert("IOT: Unlock Signal Sent. Please place the parcel in the locker.");
-        showPane('c-dashboard');
+    window.proceedToGrid = () => {
+        if(!document.getElementById("rec-name").value) return notify("Please provide the recipient's name.", "error");
+        if(!document.getElementById("cour-name").value) return notify("Please input the courier details.", "error");
+        
+        document.getElementById("drop-step-1").style.display = "none";
+        document.getElementById("drop-step-2").style.display = "block";
     };
 
-    function loadCourierData() {
-        onValue(ref(db, 'parcels'), (snapshot) => {
-            const pendingList = document.getElementById('pending-list');
-            const pastList = document.getElementById('past-list');
-            pendingList.innerHTML = ''; pastList.innerHTML = '';
-            
-            snapshot.forEach((child) => {
-                const p = child.val();
-                const html = `<div class="activity-item">
-                    <span><b>${p.receiver}</b><br><small>${p.timestamp.split('T')[0]}</small></span>
-                    <span style="color:${p.status === 'Pending' ? 'var(--neon-blue)' : 'var(--neon-green)'}">${p.status}</span>
-                </div>`;
-                
-                if(p.status === 'Pending') pendingList.innerHTML += html;
-                else pastList.innerHTML += html;
-            });
-        });
-    }
+    window.backToStep1 = () => {
+        document.getElementById("drop-step-1").style.display = "block";
+        document.getElementById("drop-step-2").style.display = "none";
+    };
 
-    // --- 3. RECIPIENT LOGIC ---
-    function loadRecipientData() {
-        onValue(ref(db, 'parcels'), (snapshot) => {
-            const content = document.getElementById('recipient-content');
-            content.innerHTML = '';
-            snapshot.forEach((child) => {
-                const p = child.val();
-                if(p.receiver.toLowerCase().includes("alexis") || p.status === "Pending") {
-                    content.innerHTML += `<div class="card">
-                        <h3 style="color:var(--neon-blue)">Parcel Ready for Pickup</h3>
-                        <p>Locker 1 is currently <b>Occupied</b></p>
-                        <button class="btn btn-success">GENERATE QR CODE</button>
-                    </div>`;
-                }
+    // PHASE 1: START HARDWARE ACTIVATION
+    window.selectLocker = async (num) => {
+        const hardwareSnap = await get(ref(db, `system_control/locker_${num}`));
+        if (hardwareSnap.val().is_occupied) return notify(`Locker 0${num} is currently unavailable.`, "error");
+
+        const file = document.getElementById("f-cam").files[0];
+        if(!file) return notify("A visual capture of the parcel is required.", "error");
+        const amt = document.getElementById('amount-due').value || "0.00";
+        
+        toggleLoader(true, "Synchronizing with Hardware...");
+        try {
+            const sPath = sRef(storage, `parcels/${Date.now()}`);
+            const uploadSnap = await uploadBytes(sPath, file);
+            const photoLink = await getDownloadURL(uploadSnap.ref);
+            const secureToken = Math.random().toString(36).substring(2, 12).toUpperCase();
+
+            // Unlock solenoid, state dropping off, turn ON LED strip
+            await update(ref(db, `system_control/locker_${num}`), {
+                lock_command: "UNLOCKED",
+                state: "DROPPING_OFF",
+                led_state: true, // Turn LED on for deposit
+                buzzer_alarm: false
             });
-        });
+            
+            // Start 10s security countdown, awaiting door sensor closing
+            startDoorTimer(num, "DROPPING_OFF");
+
+            await push(ref(db, "parcels"), {
+                receiver: document.getElementById("rec-name").value,
+                phone: document.getElementById("rec-phone").value,
+                courier_name: document.getElementById('cour-name').value,
+                courier_phone: document.getElementById('cour-phone').value,
+                amount: amt,
+                payment_type: selPayment,
+                payment_status: (selPayment === 'Prepaid' ? 'Completed' : 'Pending'),
+                locker: num, photo: photoLink, token: secureToken,
+                status: "AWAITING_CONFIRMATION", timestamp: new Date().toLocaleString()
+            });
+
+            toggleLoader(false);
+            document.getElementById('opening-overlay').setAttribute('data-locker', num);
+            document.getElementById('opening-overlay').style.display = 'flex';
+        } catch (err) {
+            toggleLoader(false);
+            notify("Communication with the cloud server failed.", "error");
+        }
+    };
+
+    window.closeOpeningOverlay = () => {
+        // Fallback button if door sensor integration fails during testing
+        const num = document.getElementById('opening-overlay').getAttribute('data-locker');
+        stopDoorAlarm(num);
+        document.getElementById('opening-overlay').style.display = 'none';
+        location.reload();
+    };
+
+    // --- NAVIGATION ---
+    window.showPane = (id) => {
+        document.querySelectorAll(".pane").forEach(p => p.style.display = "none");
+        document.getElementById(id).style.display = "block";
+        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+        if (id === 'r-dashboard') document.getElementById('nav-rec').classList.add('active');
+        if (id === 'r-history') document.getElementById('nav-his').classList.add('active');
+        if (id === 'c-dashboard') document.getElementById('nav-dash').classList.add('active');
+        if (id === 'c-drop-off') document.getElementById('nav-drop').classList.add('active');
+    };
+
+    window.toggleCourierHistory = () => {
+        const el = document.getElementById('courier-history-card');
+        el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+    };
+
+    document.getElementById("logoutBtn").onclick = () => {
+        signOut(auth).then(() => { localStorage.clear(); location.reload(); });
+    };
+
+    // --- DEVELOPER DB WIPE ---
+    const devResetBtn = document.getElementById("devResetBtn");
+    if (devResetBtn) {
+        devResetBtn.onclick = async () => {
+            if(!confirm("Warning: Proceeding will format the database and clear all current transactions. Continue?")) return;
+            
+            toggleLoader(true, "Resetting System Database...");
+            try {
+                const defaultLockerState = { 
+                    state: "AVAILABLE", lock_command: "LOCKED", door_state: "CLOSED", 
+                    buzzer_alarm: false, scanner_power: false, is_occupied: false, led_state: false,
+                    weight_status: 0, active_token: "", security_status: "SECURE",
+                    tft_display_state: "STANDBY", current_qr_hash: "EMPTY"
+                };
+                
+                await set(ref(db, "system_control"), { locker_1: defaultLockerState, locker_2: defaultLockerState });
+                await set(ref(db, "parcels"), null);
+                await set(ref(db, "system_stats/total_revenue"), 0);
+                
+                toggleLoader(false);
+                notify("System reset has been successfully completed.", "success");
+                setTimeout(() => location.reload(), 1500);
+            } catch (e) {
+                toggleLoader(false);
+                notify("System reset encountered an error.", "error");
+            }
+        };
     }
 </script>
 </body>
