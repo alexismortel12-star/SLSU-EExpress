@@ -1,201 +1,626 @@
-/* --- SLSU EExpress BRANDING & VARIABLES --- */
+/* * ============================================================
+ * PROJECT: SLSU EExpress+ Smart Cloud Locker
+ * VERSION: 10.2 (ETHEREAL NATURE-TECH + PROFESSIONAL TYPOGRAPHY)
+ * LAYER 1: BRANDING, DEPTH & REACTIVE VARIABLES
+ * ============================================================
+ */
+
 :root {
-    --bg-dark: #0f172a;        /* Deep midnight blue background */
-    --glass-bg: rgba(30, 41, 59, 0.98); 
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --neon-green: #00ff9d;     /* "Available" / Success */
-    --neon-blue: #38bdf8;      /* Primary Action */
-    --neon-purple: #c084fc;    /* Accent / Pending status */
-    --danger: #f43f5e;         /* Logout / Error */
-    --warning: #fbbf24;        /* Warning / Pay Later */
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
+    /* Primary Background Palette (Deep Slate & Teal Anchor) */
+    --bg-dark: #02353C;       /* Dark Slate/Teal from palette */
+    --bg-deep: #011a1d;       /* Deeper shadow variant for anchoring */
+    --glass: rgba(2, 53, 60, 0.5);
+    --glass-heavy: rgba(2, 53, 60, 0.9);
+    
+    /* Hardware State Logic Colors (Ethereal Cyan & Seafoam) */
+    --primary-cyan: #3FD0C9;  /* PHASE 1 & PRIMARY: Bright Aqua / Main Actions */
+    --seafoam: #2EAF7D;       /* PHASE 3: Secondary Status / Smooth Transitions */
+    --sage-olive: #449342;    /* OCCUPIED/NATURE: Muted grounding green */
+    --warning-gold: #fbbf24;  /* TRANSITION: Door Open / Settle Window */
+    --danger-red: #ef4444;    /* BREACH: Unauthorized Removal Alert */
+    
+    /* NEW WORKFLOW COLORS (Phase 1, 2 & 3 Additions) */
+    --return-orange: #f97316; /* PHASE 2: Parcel Rejected / Return to Sender */
+    --pending-purple: #8b5cf6;/* PHASE 2: Paylater / Payment Settlement Required */
+    
+    /* Typography & Depth */
+    --text-primary: #ffffff;
+    --text-secondary: #C1F6ED; /* Light icy cyan for subtext and highlights */
+    --border-dim: rgba(63, 208, 201, 0.2); /* Faint cyan glow at edges */
+    --border-bright: rgba(63, 208, 201, 0.5);
+    --shadow-deep: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 30px rgba(63, 208, 201, 0.4);
+    
+    /* Animation Timings */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-/* --- GLOBAL RESET & LAYOUT --- */
-body { 
-    margin: 0; 
-    font-family: 'Segoe UI', Roboto, sans-serif; 
-    background-color: var(--bg-dark); 
-    color: var(--text-main); 
-    height: 100vh; 
-    overflow: hidden; 
-    display: flex; 
+/* * ============================================================
+ * LAYER 2: GLOBAL ARCHITECTURE (AUTO-ADAPTIVE)
+ * ============================================================
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
-/* --- AUTH / LOGIN OVERLAY --- */
-#auth-overlay {
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-    z-index: 10000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
+/* --- THE ULTIMATE DESKTOP SCALING FIX --- */
+html { font-size: 16px; } /* Base mobile/tablet */
+@media (min-width: 1200px) { html { font-size: 18px; } } /* Small Laptops */
+@media (min-width: 1600px) { html { font-size: 22px; } } /* 1080p Monitors */
+@media (min-width: 2500px) { html { font-size: 28px; } } /* 4K Ultra-Wide */
 
-.auth-card {
-    background: var(--glass-bg);
-    padding: 40px;
-    border-radius: 24px;
-    border: 1px solid var(--glass-border);
+body {
+    /* Upgraded to highly professional, authoritative corporate typography */
+    font-family: 'Montserrat', 'Helvetica Neue', 'Inter', 'Segoe UI', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100dvh;
     width: 100%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: hidden; /* Main window fixed; containers scroll */
+    display: flex;
+    flex-direction: row; /* Default: Laptop Sidebar View */
+}
+
+/* Custom High-Tech Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+::-webkit-scrollbar-thumb { 
+    background: var(--seafoam); 
+    border-radius: 10px; 
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--primary-cyan); }
+
+/* * ============================================================
+ * LAYER 3: SIDEBAR / NAVIGATION ENGINE
+ * ============================================================
+ */
+
+.sidebar {
+    width: clamp(320px, 22vw, 450px);
+    height: 100%;
+    background: var(--glass-heavy);
+    border-right: 1px solid var(--border-dim);
+    padding: 60px 30px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    flex-shrink: 0;
+    transition: all 0.5s var(--ease-out);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.4);
     backdrop-filter: blur(20px);
 }
 
-/* --- SIDEBAR NAVIGATION --- */
-.sidebar { 
-    width: 280px; 
-    background: var(--glass-bg); 
-    border-right: 1px solid var(--glass-border); 
-    padding: 30px; 
-    display: flex; 
-    flex-direction: column; 
-    box-shadow: 10px 0 30px rgba(0,0,0,0.3);
-}
-
 .sidebar-logo {
-    font-size: 1.6rem;
+    font-size: 2.2rem;
     font-weight: 900;
-    color: var(--neon-green);
-    margin-bottom: 40px;
-    letter-spacing: 1px;
+    color: var(--text-primary);
+    margin-bottom: 70px;
+    letter-spacing: -0.5px; /* Tighter spacing for professional branding */
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
 }
 
-.nav-item { 
-    padding: 14px 20px; 
-    margin-bottom: 10px; 
-    border-radius: 12px; 
-    cursor: pointer; 
-    color: var(--text-muted); 
-    transition: 0.3s ease;
+.nav-item {
+    padding: 22px 25px;
+    margin-bottom: 15px;
+    border-radius: 22px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-weight: 600; /* Polished weight */
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.4s var(--ease-out);
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.02);
 }
 
-.nav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-main); }
-
-.nav-item.active { 
-    background: rgba(56, 189, 248, 0.1); 
-    color: var(--neon-blue); 
-    font-weight: bold; 
-    border-left: 4px solid var(--neon-blue);
+.nav-item:hover {
+    background: rgba(63, 208, 201, 0.08);
+    color: white;
+    transform: translateX(5px);
 }
 
-/* --- CONTENT AREA --- */
-.content { 
-    flex: 1; 
-    padding: 40px; 
-    overflow-y: auto; 
-    background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.05), transparent);
+.nav-item.active {
+    background: linear-gradient(90deg, rgba(63, 208, 201, 0.15) 0%, transparent 100%);
+    color: var(--primary-cyan);
+    border-left: 4px solid var(--primary-cyan);
+    border-top: 1px solid rgba(63, 208, 201, 0.2);
+    box-shadow: var(--shadow-glow);
 }
+
+.icon { font-size: 1.5rem; filter: drop-shadow(0 0 5px currentColor); }
+
+.btn-logout, #logoutBtn {
+    margin-top: auto;
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-red);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-weight: 800;
+    transition: 0.3s;
+}
+#logoutBtn:hover { background: var(--danger-red); color: #fff; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+
+/* DEV RESET Button Styling */
+#devResetBtn {
+    margin-top: auto; 
+    margin-bottom: 15px; 
+    background: rgba(251, 191, 36, 0.1); 
+    color: var(--warning-gold); 
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    font-weight: 900; 
+    transition: 0.3s;
+}
+#devResetBtn:hover { background: var(--warning-gold); color: #000; box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+
+/* * ============================================================
+ * LAYER 4: CONTENT SCALING & GRID SYSTEM
+ * ============================================================
+ */
+
+.content {
+    flex: 1;
+    height: 100%;
+    padding: clamp(30px, 5vw, 80px);
+    overflow-y: auto;
+    /* Sweeping dynamic nature-tech gradient */
+    background: radial-gradient(circle at top right, #11595e, var(--bg-deep) 70%);
+    display: flex;
+    flex-direction: column;
+}
+
+h2 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    margin-bottom: 45px;
+    border-left: 12px solid var(--primary-cyan);
+    padding-left: 25px;
+    letter-spacing: -1px;
+    line-height: 1;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    color: var(--text-secondary);
+}
+h2 b { color: var(--text-primary); }
+
+/* Intelligent Locker Grid (2 Columns Desktop, 1 Column Mobile) */
+.locker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 35px;
+    margin-bottom: 40px;
+}
+
+/* * ============================================================
+ * LAYER 5: INTERACTIVE LOCKER CARDS (HUD STYLE)
+ * ============================================================
+ */
+
+.locker-card {
+    background: var(--glass);
+    border: 1px solid var(--border-dim);
+    border-top: 1px solid var(--border-bright);
+    border-radius: 40px;
+    padding: 70px 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s var(--ease-out);
+    cursor: pointer;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+.locker-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    border-color: var(--primary-cyan);
+    background: rgba(2, 53, 60, 0.7);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 20px rgba(63, 208, 201, 0.1);
+}
+
+/* Live Weight Hudson Display */
+.weight-badge {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(1, 26, 29, 0.9);
+    color: var(--primary-cyan);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    border: 1px solid var(--border-dim);
+    box-shadow: inset 0 0 10px rgba(63, 208, 201, 0.2);
+}
+
+/* LED Strip Status Dot */
+.led-indicator {
+    position: absolute;
+    top: 25px;
+    left: 30px;
+    width: 12px;
+    height: 12px;
+    background: #1e293b;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+.led-on { background: var(--primary-cyan); box-shadow: 0 0 15px var(--primary-cyan); }
+
+/* * ============================================================
+ * LAYER 6: HARDWARE LOGIC STATES (UPDATED WITH WORKFLOW)
+ * ============================================================
+ */
+
+.locker-available {
+    border-color: var(--primary-cyan) !important;
+    color: var(--primary-cyan) !important;
+    background: radial-gradient(circle at center, rgba(63, 208, 201, 0.08), transparent) !important;
+    animation: pulseGlow 3s infinite ease-in-out;
+}
+
+.locker-occupied {
+    background: rgba(1, 26, 29, 0.6) !important;
+    border-color: var(--sage-olive) !important;
+    color: var(--sage-olive) !important;
+}
+
+.locker-warning {
+    border-color: var(--warning-gold) !important;
+    color: var(--warning-gold) !important;
+    animation: warningBlink 1s infinite alternate;
+}
+
+/* 10-Second Countdown State (Phase 1 & Phase 3) */
+.locker-countdown {
+    border-color: var(--warning-gold) !important;
+    color: var(--warning-gold) !important;
+    animation: countdownPulse 1s infinite;
+}
+
+/* Parcel Rejected / Return State (Phase 2) */
+.locker-return {
+    background: rgba(249, 115, 22, 0.15) !important;
+    border-color: var(--return-orange) !important;
+    color: var(--return-orange) !important;
+}
+
+/* Payment Pending / Paylater State (Phase 2) */
+.locker-pending {
+    background: rgba(139, 92, 246, 0.15) !important;
+    border-color: var(--pending-purple) !important;
+    color: var(--pending-purple) !important;
+}
+
+.locker-breach {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: var(--danger-red) !important;
+    color: var(--danger-red) !important;
+    animation: shakeAlert 0.2s infinite linear;
+    box-shadow: inset 0 0 40px rgba(239, 68, 68, 0.3), 0 0 40px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* * ============================================================
+ * LAYER 7: SYSTEM OVERLAYS & LOADING SCREENS (NEW)
+ * ============================================================
+ */
+
+/* DESKTOP AUTH CARD FIX */
+.auth-card {
+    width: 95% !important;
+    max-width: 800px !important;
+    padding: 80px 60px !important;
+    background: rgba(2, 53, 60, 0.85) !important;
+    backdrop-filter: blur(30px) !important;
+    border: 1px solid var(--border-bright) !important;
+    border-top: 2px solid var(--primary-cyan) !important;
+    border-radius: 40px !important;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 40px rgba(63, 208, 201, 0.2) !important;
+}
+.auth-card h1 { font-size: 4rem !important; margin-bottom: 10px !important; color: var(--primary-cyan); font-weight: 800; letter-spacing: -1px; }
+.auth-card p { font-size: 1.4rem !important; margin-bottom: 50px !important; color: var(--text-primary); letter-spacing: 0.5px; }
+
+/* General Overlay */
+.system-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(1, 26, 29, 0.95);
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    text-align: center;
+    backdrop-filter: blur(30px);
+}
+
+/* NEW: Professional Loading Screen Element */
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-deep);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(20px);
+}
+
+/* The SLSU EExpress+ Main Title Injection */
+.loading-screen::before {
+    content: "SLSU EExpress+";
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--primary-cyan);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    text-shadow: 0 0 25px rgba(63, 208, 201, 0.5);
+    animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* The Status Subtext Injection */
+.loading-screen::after {
+    content: "SECURE SYSTEM INITIALIZATION...";
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    animation: warningBlink 1.5s infinite alternate;
+}
+
+.door-animation {
+    font-size: 8rem;
+    margin-bottom: 30px;
+    filter: drop-shadow(0 0 30px var(--primary-cyan));
+    animation: doorSwing 1.8s ease-in-out infinite alternate;
+}
+
+/* * ============================================================
+ * LAYER 8: MOBILE RESPONSIVE ENGINE (PHONE FIX)
+ * ============================================================
+ */
+
+@media (max-width: 768px) {
+    body { display: block; position: relative; }
+
+    .sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+        padding: 15px 10px;
+        flex-direction: row;
+        border-right: none;
+        border-top: 1px solid var(--border-dim);
+        justify-content: space-around;
+        align-items: center;
+        background: rgba(2, 53, 60, 0.98);
+        backdrop-filter: blur(20px);
+        z-index: 1000;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+    }
+
+    .sidebar-logo, .nav-item span:not(.icon) { display: none; }
+
+    .nav-item {
+        margin-bottom: 0;
+        flex: 1;
+        justify-content: center;
+        font-size: 2.2rem;
+        background: none !important;
+        border: none !important;
+        padding: 10px;
+    }
+
+    .nav-item.active {
+        color: var(--primary-cyan);
+        border: none !important;
+        background: radial-gradient(circle at center, rgba(63, 208, 201, 0.2), transparent) !important;
+        border-radius: 20px;
+        box-shadow: none;
+    }
+    
+    .nav-item.active .icon { filter: drop-shadow(0 0 10px var(--primary-cyan)); transform: scale(1.1); }
+
+    .btn-logout, #logoutBtn {
+        position: absolute; top: 25px; right: 25px; width: auto; padding: 12px 20px; font-size: 0.85rem; margin-top: 0; z-index: 900;
+    }
+
+    #devResetBtn {
+        position: absolute; top: 25px; right: 130px; width: auto; padding: 12px 20px; font-size: 0.85rem; margin-top: 0; z-index: 900;
+    }
+
+    .content { height: 100dvh; width: 100%; padding: 30px 20px 120px 20px; overflow-y: auto; }
+    .locker-grid { grid-template-columns: 1fr; gap: 20px; }
+    h2 { font-size: 2.2rem; margin-bottom: 30px; }
+    .locker-card { padding: 50px 20px; }
+    .auth-card { width: 95% !important; max-width: none !important; padding: 50px 30px !important; }
+    .auth-card h1 { font-size: 3rem !important; }
+    .loading-screen::before { font-size: 2.2rem; }
+}
+
+/* * ============================================================
+ * LAYER 9: ANIMATION KEYFRAMES (UPDATED)
+ * ============================================================
+ */
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: inset 0 0 0 transparent, 0 0 0 transparent; }
+    50% { box-shadow: inset 0 0 20px rgba(63, 208, 201, 0.15), 0 0 35px rgba(63, 208, 201, 0.3); }
+}
+
+/* Prominent pulse for the 10-Second Hardware Countdown */
+@keyframes countdownPulse {
+    0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(251, 191, 36, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}
+
+/* Luminous Current Effect for Primary Buttons */
+@keyframes electricalCurrent {
+    0% { box-shadow: 0 0 15px rgba(63, 208, 201, 0.4), inset 0 0 5px rgba(255, 255, 255, 0.2); }
+    50% { box-shadow: 0 0 30px rgba(63, 208, 201, 0.8), 0 0 15px rgba(46, 175, 125, 0.6) inset; }
+    100% { box-shadow: 0 0 15px rgba(63, 208, 201, 0.4), inset 0 0 5px rgba(255, 255, 255, 0.2); }
+}
+
+@keyframes warningBlink {
+    from { opacity: 1; transform: scale(1); filter: brightness(1); }
+    to { opacity: 0.7; transform: scale(0.98); filter: brightness(0.8); }
+}
+
+@keyframes shakeAlert {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(8px); }
+    75% { transform: translateX(-8px); }
+}
+
+@keyframes doorSwing {
+    from { transform: perspective(1000px) rotateY(0deg); }
+    to { transform: perspective(1000px) rotateY(-45deg); filter: drop-shadow(0 0 40px var(--primary-cyan)); }
+}
+
+.alarm-active { animation: alarmBg 0.5s infinite alternate; }
+@keyframes alarmBg {
+    from { background-color: var(--bg-dark); }
+    to { background-color: rgba(239, 68, 68, 0.3); }
+}
+
+/* * ============================================================
+ * LAYER 10: MISC COMPONENTS (PANES, INPUTS & BUTTONS)
+ * ============================================================
+ */
 
 .pane { 
     display: none; 
-    animation: slideUp 0.4s ease-out;
-}
-
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- ACTIVITY LISTS (PENDING & PAST) --- */
-.activity-card {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    margin-bottom: 25px;
-    overflow: hidden;
-}
-
-.activity-item {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--glass-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: 0.2s;
-}
-
-.activity-item:last-child { border-bottom: none; }
-.activity-item:hover { background: rgba(255,255,255,0.03); }
-
-/* --- PHOTO DOCUMENTATION UI --- */
-.photo-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin: 20px 0;
-}
-
-#preview-img {
+    animation: slideUp 0.6s var(--ease-out); 
     width: 100%;
-    max-height: 250px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-top: 15px;
-    border: 2px solid var(--neon-blue);
-    display: none; /* Shown via JS after selection */
+    max-width: 1400px; /* Locks it centrally */
+    margin: 0 auto;
 }
 
-/* --- FORMS & INPUTS --- */
-.card { 
+@keyframes slideUp { 
+    from { opacity: 0; transform: translateY(50px); filter: blur(10px); } 
+    to { opacity: 1; transform: translateY(0); filter: blur(0); } 
+}
+
+.card {
+    background: var(--glass);
+    border: 1px solid var(--border-dim);
+    border-top: 1px solid var(--border-bright);
+    border-radius: 30px;
+    padding: clamp(30px, 4vw, 50px);
+    margin-bottom: 30px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    backdrop-filter: blur(20px);
+}
+
+/* Neumorphic Input Fields */
+input {
+    width: 100%;
+    padding: 26px 24px;
+    border-radius: 20px;
+    background: rgba(1, 26, 29, 0.6);
+    border: 1px solid var(--border-dim);
+    border-top: 1px solid rgba(0,0,0,0.5);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 25px;
+    transition: all 0.3s var(--ease-out);
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.4);
+    font-family: inherit;
+}
+
+input:focus {
+    border-color: var(--primary-cyan);
+    background: rgba(1, 26, 29, 0.9);
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.6), 0 0 20px rgba(63, 208, 201, 0.3);
+    outline: none;
+}
+
+/* Premium Gradient Buttons */
+.btn {
+    width: 100%;
+    padding: 24px;
+    border-radius: 20px;
+    font-weight: 800; /* Sturdy, authoritative weight */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    border: none;
+    font-size: 1rem;
+    position: relative;
+    overflow: hidden;
+    font-family: inherit;
+}
+
+/* The "Ready to Scan" Handshake Button (Aqua to Seafoam Gradient) */
+.btn-primary { 
+    background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--seafoam) 100%); 
+    color: #011a1d; 
+    animation: electricalCurrent 2.5s infinite; /* Luminous glow effect */
+}
+
+.btn-primary:hover { 
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(63, 208, 201, 0.6); 
+    filter: brightness(1.1);
+}
+
+.btn-success { 
+    background: linear-gradient(135deg, var(--seafoam) 0%, var(--sage-olive) 100%); 
+    color: #ffffff; 
+    box-shadow: 0 10px 20px rgba(46, 175, 125, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(46, 175, 125, 0.5);
+}
+
+.btn-ghost { 
     background: rgba(255,255,255,0.03); 
-    border: 1px solid var(--glass-border); 
-    padding: 24px; 
-    border-radius: 20px; 
+    color: var(--primary-cyan); 
+    border: 1px solid var(--border-bright); 
     backdrop-filter: blur(10px);
 }
 
-input, select { 
-    width: 100%; 
-    background: rgba(0,0,0,0.3); 
-    border: 1px solid var(--glass-border); 
-    padding: 14px; 
-    border-radius: 10px; 
-    color: white; 
-    margin: 10px 0 20px 0; 
-    box-sizing: border-box; 
-    font-size: 1rem;
-    transition: 0.3s;
+.btn-ghost:hover {
+    background: rgba(63, 208, 201, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 0 15px rgba(63, 208, 201, 0.2);
 }
 
-input:focus { border-color: var(--neon-blue); outline: none; background: rgba(0,0,0,0.5); }
-
-/* --- BUTTONS --- */
-.btn { 
-    width: 100%; 
-    padding: 15px; 
-    border-radius: 12px; 
-    border: none; 
-    font-weight: 800; 
-    cursor: pointer; 
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.qr-box {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 35px;
+    width: fit-content;
+    margin: 30px auto;
+    border: 8px solid var(--primary-cyan);
+    box-shadow: 0 0 60px rgba(63, 208, 201, 0.4);
+    transform: scale(1.05);
 }
-
-.btn-primary { background: var(--neon-blue); color: var(--bg-dark); }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3); }
-
-.btn-success { background: var(--neon-green); color: var(--bg-dark); }
-.btn-ghost { background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--glass-border); }
-.btn-ghost:hover { background: rgba(255,255,255,0.1); }
-
-/* --- STATUS PILLS --- */
-.status-pill { 
-    padding: 6px 16px; 
-    border-radius: 50px; 
-    font-size: 0.7rem; 
-    font-weight: 900; 
-    text-transform: uppercase;
-}
-
-.pill-pending { background: rgba(192, 132, 252, 0.15); color: var(--neon-purple); }
-.pill-completed { background: rgba(0, 255, 157, 0.15); color: var(--neon-green); }
