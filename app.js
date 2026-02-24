@@ -1,7 +1,7 @@
 /**
  * ============================================================
  * PROJECT: SLSU EExpress+ Smart Cloud Locker
- * VERSION: 9.2.0 (Structured 4-Phase IoT Workflow)
+ * VERSION: 9.2.1 (Fixed QR Token Sync with ESP32)
  * ============================================================
  * CORE STATE LOGIC:
  * - Phase 1 (Courier Drop-Off): Auth -> Select Locker -> Unlock & LED ON -> 10s Watchdog -> Secured.
@@ -472,6 +472,7 @@ window.selectLocker = async (num) => {
             "state": "DROPPING_OFF",
             "buzzer_alarm": false,
             "security_status": "SECURE",
+            "active_token": "EMPTY", // Ensure QR screen is empty during drop off
             "led_state": true, // LED Automatically Illuminates Drop-Off Space
             "ui_session/delivery_status": "AWAITING_CONFIRMATION",
             "ui_session/rider_name": document.getElementById('cour-name').value,
@@ -547,7 +548,8 @@ window.vfy = async (id, isMine, lockerNum) => {
 window.triggerReadyToScan = async (lockerNum, token) => {
     // PHASE 3: QR Code Generation Signal via Firebase
     await update(ref(db, `system_control/locker_${lockerNum}`), { 
-        "ui_session/ready_to_scan": true 
+        "ui_session/ready_to_scan": true,
+        "active_token": token // FIX: This specifically tells the ESP32 to send the token to the Mega screen!
     });
     window.openCameraScanner(token, lockerNum);
     notify("Link established. Scan terminal QR.", "success");
@@ -635,6 +637,7 @@ function onScanSuccess(decodedText) {
             "state": "PICKING_UP",
             "lock_command": "UNLOCKED",
             "led_state": true, // Turns on the LED strip to illuminate parcel removal
+            "active_token": "EMPTY", // FIX: This clears the QR code from the physical Mega screen immediately!
             "ui_session/delivery_status": "COMPLETED",
             "ui_session/rider_name": "EMPTY",
             "ui_session/rider_contact": "EMPTY",
