@@ -1,12 +1,12 @@
 /**
  * ============================================================
  * PROJECT: SLSU EExpress+ Smart Cloud Locker
- * VERSION: 9.2.1 (Fixed QR Token Sync with ESP32)
+ * VERSION: 9.3.0 (Structured 4-Phase IoT Workflow - QR Sync Fixed)
  * ============================================================
  * CORE STATE LOGIC:
  * - Phase 1 (Courier Drop-Off): Auth -> Select Locker -> Unlock & LED ON -> 10s Watchdog -> Secured.
  * - Phase 2 (Recipient Verification): Confirms Ownership -> Payment Check -> Rejection Handling.
- * - Phase 3 (Recipient Retrieval): 'Ready' -> TFT QR Gen -> Scan -> Unlock & LED ON -> 10s Watchdog.
+ * - Phase 3 (Recipient Retrieval): 'Ready' -> TFT QR Gen -> Scan -> Live DB Validation -> Unlock & LED ON -> 10s Watchdog.
  * - Phase 4 (Exception Handling): Anti-Theft Breach States & Active TFT Monitor UI Mirroring.
  */
 
@@ -44,7 +44,6 @@ let watchdogTimers = { 1: null, 2: null };
 
 let html5QrcodeScanner = null;
 let currentRetrievingLocker = 0;
-let expectedRetrievalToken = "";
 
 // Injecting Cyber-Veridian Keyframes for dynamic animations
 const styleInject = document.createElement('style');
@@ -112,7 +111,7 @@ window.toggleLoader = (show, text = "ENERGIZING CLOUD...") => {
 window.startDoorTimer = (n) => {
     if (watchdogTimers[n]) clearTimeout(watchdogTimers[n]);
     
-    // Modified to exact 10-second countdown requirement
+    // Exact 10-second countdown requirement
     watchdogTimers[n] = setTimeout(async () => {
         const snap = await get(ref(db, `system_control/locker_${n}`));
         const state = snap.val();
@@ -403,7 +402,7 @@ function startGlobalListeners() {
                                 <div class="card" style="background: rgba(10, 15, 12, 0.9); border: 1px solid #39ff14; box-shadow: 0 0 20px rgba(57, 255, 20, 0.15); text-align: center;">
                                     <h3 style="font-size: 1.8rem; margin-bottom: 15px; color: #39ff14; font-family: monospace; text-shadow: 0 0 10px rgba(57, 255, 20, 0.4);">SYSTEM SECURED: L-0${p.locker}</h3>
                                     <p style="color: #a0e8af; font-family: monospace; margin-bottom: 25px;">Hardware linked. Initiate handshake when physically present at the terminal to prevent unauthorized access.</p>
-                                    <button class="btn" style="background: #39ff14; color: #0a0f0c; font-family: monospace; font-size: 1.3rem; font-weight: bold; border: none; box-shadow: 0 0 15px rgba(57, 255, 20, 0.6); transition: 0.3s;" onclick="window.triggerReadyToScan(${p.locker}, '${p.token}')" onmouseover="this.style.boxShadow='0 0 30px rgba(57, 255, 20, 0.9)'" onmouseout="this.style.boxShadow='0 0 15px rgba(57, 255, 20, 0.6)'">> READY TO SCAN _</button>
+                                    <button class="btn" style="background: #39ff14; color: #0a0f0c; font-family: monospace; font-size: 1.3rem; font-weight: bold; border: none; box-shadow: 0 0 15px rgba(57, 255, 20, 0.6); transition: 0.3s;" onclick="window.triggerReadyToScan(${p.locker})" onmouseover="this.style.boxShadow='0 0 30px rgba(57, 255, 20, 0.9)'" onmouseout="this.style.boxShadow='0 0 15px rgba(57, 255, 20, 0.6)'">> READY TO SCAN _</button>
                                 </div>`;
                         }
                     }
@@ -464,7 +463,8 @@ window.selectLocker = async (num) => {
         const sPath = sRef(storage, `parcels/${Date.now()}`);
         const uploadSnap = await uploadBytes(sPath, file);
         const photoLink = await getDownloadURL(uploadSnap.ref);
-        const secureToken = Math.random().toString(36).substring(2, 10).toUpperCase();
+        
+        // Removed secureToken generation from here; we only want to generate it during retrieval
 
         // PHASE 1: Hardware Activation - Unlocks Solenoid AND turns on LED Strip
         const lockerUpdates = {
@@ -472,7 +472,6 @@ window.selectLocker = async (num) => {
             "state": "DROPPING_OFF",
             "buzzer_alarm": false,
             "security_status": "SECURE",
-            "active_token": "EMPTY", // Ensure QR screen is empty during drop off
             "led_state": true, // LED Automatically Illuminates Drop-Off Space
             "ui_session/delivery_status": "AWAITING_CONFIRMATION",
             "ui_session/rider_name": document.getElementById('cour-name').value,
@@ -480,7 +479,7 @@ window.selectLocker = async (num) => {
             "ui_session/recipient_email": document.getElementById("rec-name").value,
             "ui_session/is_confirmed": false,
             "ui_session/ready_to_scan": false,
-            "ui_session/monitor_qr_token": secureToken
+            "ui_session/monitor_qr_token": "EMPTY" 
         };
         
         await update(ref(db, `system_control/locker_${num}`), lockerUpdates);
@@ -493,7 +492,7 @@ window.selectLocker = async (num) => {
             amount: amt,
             payment_type: selPayment,
             payment_status: (selPayment === 'Prepaid' ? 'Completed' : 'Pending'),
-            locker: num, photo: photoLink, token: secureToken,
+            locker: num, photo: photoLink, token: "PENDING_GENERATION",
             status: "Awaiting Verification", timestamp: new Date().toLocaleString()
         });
 
@@ -545,13 +544,24 @@ window.vfy = async (id, isMine, lockerNum) => {
     }
 };
 
-window.triggerReadyToScan = async (lockerNum, token) => {
-    // PHASE 3: QR Code Generation Signal via Firebase
+window.triggerReadyToScan = async (lockerNum) => {
+    // PHASE 3: DYNAMIC QR CODE GENERATION (FIX APPLIED HERE)
+    
+    // 1. Generate a secure, randomized 6-character token on the fly
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let liveToken = '';
+    for (let i = 0; i < 6; i++) {
+        liveToken += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // 2. Push this fresh token directly to the locker's active session in Firebase
     await update(ref(db, `system_control/locker_${lockerNum}`), { 
         "ui_session/ready_to_scan": true,
-        "active_token": token // FIX: This specifically tells the ESP32 to send the token to the Mega screen!
+        "ui_session/monitor_qr_token": liveToken // The Arduino Mega will now read this live token
     });
-    window.openCameraScanner(token, lockerNum);
+    
+    // 3. Open the camera to wait for the scan
+    window.openCameraScanner(lockerNum);
     notify("Link established. Scan terminal QR.", "success");
 };
 
@@ -588,9 +598,8 @@ window.closeInvoice = () => {
 // ==========================================
 // 9. THE WEB-CAMERA SCANNER (PHASE 3 RETRIEVAL)
 // ==========================================
-window.openCameraScanner = (tokenToMatch, lockerNum) => {
+window.openCameraScanner = (lockerNum) => {
     currentRetrievingLocker = lockerNum;
-    expectedRetrievalToken = tokenToMatch;
     
     const camOverlay = document.getElementById('camera-overlay');
     camOverlay.style.display = 'flex';
@@ -612,53 +621,61 @@ window.stopCameraScanner = () => {
     }
 };
 
-function onScanSuccess(decodedText) {
-    if (decodedText === expectedRetrievalToken) {
-        stopCameraScanner();
-        
-        // HAPTIC & VISUAL ANIMATION
-        if ("vibrate" in navigator) {
-            navigator.vibrate([100, 50, 100, 50, 200]); // Strong satisfaction click pattern
-        }
+// LIVE DATABASE VALIDATION (FIX APPLIED HERE)
+async function onScanSuccess(decodedText) {
+    const lockerRef = ref(db, `system_control/locker_${currentRetrievingLocker}`);
 
-        // Emerald Validation Pulse UI Injection
-        const authPulse = document.createElement('div');
-        authPulse.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10, 15, 12, 0.98); z-index:99999; display:flex; align-items:center; justify-content:center; flex-direction:column; font-family:monospace;";
-        authPulse.innerHTML = `
-            <div style="font-size: 5rem; color: #39ff14; text-shadow: 0 0 40px rgba(57, 255, 20, 0.8); margin-bottom: 20px;">[ VALIDATED ]</div>
-            <div style="font-size: 1.5rem; color: #a0e8af; animation: pulseVeridian 1s infinite;">Executing Hardware Command...</div>
-        `;
-        document.body.appendChild(authPulse);
-        
-        setTimeout(() => authPulse.remove(), 2500);
-        
-        // PHASE 3: Hardware Unlocking & LED Strip Engagement for Withdrawal
-        const unlockUpdates = {
-            "state": "PICKING_UP",
-            "lock_command": "UNLOCKED",
-            "led_state": true, // Turns on the LED strip to illuminate parcel removal
-            "active_token": "EMPTY", // FIX: This clears the QR code from the physical Mega screen immediately!
-            "ui_session/delivery_status": "COMPLETED",
-            "ui_session/rider_name": "EMPTY",
-            "ui_session/rider_contact": "EMPTY",
-            "ui_session/recipient_email": "EMPTY",
-            "ui_session/is_confirmed": false,
-            "ui_session/ready_to_scan": false,
-            "ui_session/monitor_qr_token": "EMPTY"
-        };
+    try {
+        const snapshot = await get(lockerRef);
+        if (snapshot.exists()) {
+            const lockerData = snapshot.val();
+            const databaseToken = lockerData.ui_session.monitor_qr_token;
 
-        update(ref(db, `system_control/locker_${currentRetrievingLocker}`), unlockUpdates)
-            .then(() => {
+            // Check if the camera read exactly what is actively stored in Firebase
+            if (decodedText === databaseToken && databaseToken !== "EMPTY" && databaseToken !== "") {
+                stopCameraScanner();
+                
+                // HAPTIC & VISUAL ANIMATION
+                if ("vibrate" in navigator) {
+                    navigator.vibrate([100, 50, 100, 50, 200]); // Strong satisfaction click pattern
+                }
+
+                // Emerald Validation Pulse UI Injection
+                const authPulse = document.createElement('div');
+                authPulse.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10, 15, 12, 0.98); z-index:99999; display:flex; align-items:center; justify-content:center; flex-direction:column; font-family:monospace;";
+                authPulse.innerHTML = `
+                    <div style="font-size: 5rem; color: #39ff14; text-shadow: 0 0 40px rgba(57, 255, 20, 0.8); margin-bottom: 20px;">[ VALIDATED ]</div>
+                    <div style="font-size: 1.5rem; color: #a0e8af; animation: pulseVeridian 1s infinite;">Executing Hardware Command...</div>
+                `;
+                document.body.appendChild(authPulse);
+                
+                setTimeout(() => authPulse.remove(), 2500);
+                
+                // PHASE 3: Hardware Unlocking & LED Strip Engagement for Withdrawal
+                const unlockUpdates = {
+                    "state": "PICKING_UP",
+                    "lock_command": "UNLOCKED",
+                    "led_state": true, // Turns on the LED strip to illuminate parcel removal
+                    "ui_session/delivery_status": "COMPLETED",
+                    "ui_session/rider_name": "EMPTY",
+                    "ui_session/rider_contact": "EMPTY",
+                    "ui_session/recipient_email": "EMPTY",
+                    "ui_session/is_confirmed": false,
+                    "ui_session/ready_to_scan": false,
+                    "ui_session/monitor_qr_token": "EMPTY" // Kills the token immediately after use
+                };
+
+                await update(lockerRef, unlockUpdates);
                 notify("Solenoid Unlocked. Secure retrieval.", "success");
                 startDoorTimer(currentRetrievingLocker); // Begins final 10-Second Countdown to Secure
-            })
-            .catch((error) => {
-                console.error("Firebase Rule Blocked the Unlock:", error);
-                notify("System Blocked Command: Rule Error", "error");
-            });
 
-    } else {
-        notify("Invalid Token Signature", "error");
+            } else {
+                notify("Invalid Token Signature. Mismatch with Cloud.", "error");
+            }
+        }
+    } catch (error) {
+        console.error("Firebase Validation Error:", error);
+        notify("Cloud Validation Failed", "error");
     }
 }
 
